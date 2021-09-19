@@ -82,12 +82,12 @@ pub fn codegen(
                 #(#cfgs)*
                 impl<'a> rtic::Mutex for shared_resources::#name<'a> {
                     type T = #ty;
-        
+
                     #[inline(always)]
                     fn lock<RTIC_INTERNAL_R>(&mut self, f: impl FnOnce(&mut #ty) -> RTIC_INTERNAL_R) -> RTIC_INTERNAL_R {
                         /// Priority ceiling
                         const CEILING: u8 = #ceiling;
-        
+
                         let mutex = unsafe { & *#ptr };
 
                         rtic::export::lock(

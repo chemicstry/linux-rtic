@@ -8,12 +8,11 @@ mod init;
 mod local_resources;
 mod local_resources_struct;
 mod module;
+mod post_init;
 mod shared_resources;
 mod shared_resources_struct;
 mod tasks;
 mod util;
-mod post_init;
-
 
 pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
     let app_name = &app.name;

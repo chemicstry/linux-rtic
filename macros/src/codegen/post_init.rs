@@ -1,6 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use rtic_syntax::{analyze::{Analysis, Ownership}, ast::App};
+use rtic_syntax::{
+    analyze::{Analysis, Ownership},
+    ast::App,
+};
 
 use crate::codegen::util;
 

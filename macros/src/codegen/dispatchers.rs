@@ -91,6 +91,8 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 /// The priority of this thread
                 const PRIORITY: u8 = #level;
 
+                rtic::export::set_current_thread_priority(PRIORITY).expect("Failed to set thread priority. Insufficient permissions?");
+
                 let rq = #rq.1.try_lock().unwrap();
                 while let Ok(task) = rq.recv() {
                     match task {

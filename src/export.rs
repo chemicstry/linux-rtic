@@ -3,8 +3,8 @@ pub use lazy_static::lazy_static;
 use std::cell::Cell;
 
 // Priority Ceiling Protocol mutexes
-pub use pcp_mutex::PcpMutex as Mutex;
 pub use pcp_mutex::PcpManager as MutexManager;
+pub use pcp_mutex::PcpMutex as Mutex;
 
 // Queue that holds inputs of a single task
 pub type TaskInputQueue<T, const N: usize> = MpMcQueue<T, N>;
@@ -29,6 +29,7 @@ impl Priority {
 
     /// Change the current priority to `value`
     // These two methods are used by `lock` (see below) but can't be used from the RTIC application
+    #[allow(dead_code)]
     #[inline(always)]
     fn set(&self, value: u8) {
         self.inner.set(value)
@@ -41,20 +42,48 @@ impl Priority {
     }
 }
 
+#[inline(always)]
+pub fn set_current_thread_priority(priority: u8) -> Result<(), i32> {
+    let param = libc::sched_param {
+        sched_priority: priority as i32,
+    };
+
+    // sched_setparam calls sched_setscheduler internally, so there is no overhead of specifying redundant policy
+    let res = unsafe { libc::sched_setscheduler(0, libc::SCHED_FIFO, &param) };
+
+    if res != 0 {
+        Err(res)
+    } else {
+        Ok(())
+    }
+}
+
 /// Lock the resource proxy by setting the BASEPRI
 /// and running the closure with interrupt::free
+#[allow(unused_variables)]
 #[inline(always)]
 pub fn lock<T, R>(
     res: &Mutex<T>,
     priority: &Priority,
-    _ceiling: u8,
+    ceiling: u8,
     f: impl FnOnce(&mut T) -> R,
 ) -> R {
     let current = priority.get();
 
-    // TODO: set priority to ceiling
+    #[cfg(feature = "use_srp")]
+    {
+        priority.set(ceiling);
+        set_current_thread_priority(ceiling)
+            .expect("Failed to set thread priority. Insufficient permissions?");
+    }
+    // Note that we lock with previous priority as PcpMutex will calculate ceiling itself
     let r = f(&mut res.lock(current));
-    // TODO: set priority to current
+    #[cfg(feature = "use_srp")]
+    {
+        set_current_thread_priority(current)
+            .expect("Failed to set thread priority. Insufficient permissions?");
+        priority.set(current);
+    }
 
     r
 }
