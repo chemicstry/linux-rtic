@@ -1,7 +1,7 @@
 use proc_macro2::{Span, TokenStream};
-use rtic_syntax::{Context, ast::App};
-use syn::{Attribute, Ident, LitInt, PatType};
 use quote::quote;
+use rtic_syntax::{ast::App, Context};
+use syn::{Attribute, Ident, LitInt, PatType};
 
 const RTIC_INTERNAL: &str = "__rtic_internal";
 

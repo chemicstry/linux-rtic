@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use rtic_syntax::{Context, analyze::Analysis, ast::App};
 use quote::quote;
+use rtic_syntax::{analyze::Analysis, ast::App, Context};
 
 use crate::codegen::{module, util};
 

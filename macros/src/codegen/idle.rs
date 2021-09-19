@@ -1,8 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use rtic_syntax::{Context, analyze::Analysis, ast::App};
+use rtic_syntax::{analyze::Analysis, ast::App, Context};
 
-use crate::{codegen::{local_resources_struct, module, shared_resources_struct}};
+use crate::codegen::{local_resources_struct, module, shared_resources_struct};
 
 /// Generates support code for `#[idle]` functions
 pub fn codegen(

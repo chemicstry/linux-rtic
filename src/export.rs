@@ -1,6 +1,6 @@
-use std::cell::Cell;
 use heapless::mpmc::MpMcQueue;
 pub use lazy_static::lazy_static;
+use std::cell::Cell;
 
 // Queue that holds inputs of a single task
 pub type TaskInputQueue<T, const N: usize> = MpMcQueue<T, N>;

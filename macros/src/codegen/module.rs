@@ -1,7 +1,7 @@
 use crate::codegen::util;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use rtic_syntax::{Context, analyze::Analysis, ast::App};
+use rtic_syntax::{analyze::Analysis, ast::App, Context};
 
 pub fn codegen(
     ctxt: Context,

@@ -1,8 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use rtic_syntax::{Context, analyze::Analysis, ast::App};
+use rtic_syntax::{analyze::Analysis, ast::App, Context};
 
-use crate::{codegen::{local_resources_struct, module}};
+use crate::codegen::{local_resources_struct, module};
 
 type CodegenResult = (
     // all generated init definitions

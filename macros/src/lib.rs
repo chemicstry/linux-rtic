@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
-use std::{fs, path::Path};
 use rtic_syntax::Settings;
+use std::{fs, path::Path};
 
 mod codegen;
 
@@ -24,7 +24,10 @@ pub fn app(args: TokenStream, input: TokenStream) -> TokenStream {
     // Try to write the expanded code to disk
     if Path::new("target").exists() {
         fs::write("target/rtic-expansion.rs", ts.to_string()).ok();
-        std::process::Command::new("rustfmt").arg("target/rtic-expansion.rs").status().ok();
+        std::process::Command::new("rustfmt")
+            .arg("target/rtic-expansion.rs")
+            .status()
+            .ok();
     }
 
     ts.into()

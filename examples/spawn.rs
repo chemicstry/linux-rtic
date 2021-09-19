@@ -17,7 +17,7 @@ mod app {
     fn foo(_c: foo::Context, x: i32, y: u32) {
         println!("foo {}, {}", x, y);
         if x < 4 {
-            foo::spawn(x+1, y+2).unwrap();
+            foo::spawn(x + 1, y + 2).unwrap();
         }
     }
 }

@@ -1,17 +1,17 @@
 use proc_macro2::TokenStream;
-use rtic_syntax::{analyze::Analysis, ast::App};
 use quote::quote;
+use rtic_syntax::{analyze::Analysis, ast::App};
 
 mod dispatchers;
-mod tasks;
-mod module;
-mod util;
-mod init;
 mod idle;
+mod init;
 mod local_resources;
 mod local_resources_struct;
+mod module;
 mod shared_resources;
 mod shared_resources_struct;
+mod tasks;
+mod util;
 
 pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
     let app_name = &app.name;
@@ -35,10 +35,8 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
         ));
     }
 
-    let (mod_app_shared_resources, mod_shared_resources) =
-        shared_resources::codegen(app, analysis);
-    let (mod_app_local_resources, mod_local_resources) =
-        local_resources::codegen(app, analysis);
+    let (mod_app_shared_resources, mod_shared_resources) = shared_resources::codegen(app, analysis);
+    let (mod_app_local_resources, mod_local_resources) = local_resources::codegen(app, analysis);
 
     quote!(
         /// The RTIC application module
