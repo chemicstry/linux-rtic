@@ -70,7 +70,12 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
         }
 
         fn main() {
+            use tracing_subscriber::prelude::*;
+            let (chrome_layer, guard) = tracing_chrome::ChromeLayerBuilder::new().build();
+            tracing_subscriber::registry().with(chrome_layer).init();
+
             unsafe { #app_name::run(); }
+            println!("end");
         }
     )
 }

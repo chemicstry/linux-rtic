@@ -15,7 +15,15 @@ heapless = "0.7"
 lazy_static = "1.4"
 pcp_mutex = { path = "../pcp_mutex" }
 libc = "0.2"
+tracing = { version = "0.1", optional = true }
+ctrlc = "3.2"
+
+[dev-dependencies]
+tracing-subscriber = "0.2"
+tracing-chrome = "0.3"
 
 [features]
 # Enables SRP protocol on top of PCP
 use_srp = []
+# Enables tracing
+profiling = ["tracing"]

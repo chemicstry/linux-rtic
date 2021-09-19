@@ -63,6 +63,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 let cfgs = &task.cfgs;
                 let input_queue = util::task_input_queue_ident(name);
                 let (_, tupled, pats, _) = util::regroup_inputs(&task.inputs);
+                let tracing_name = format!("task_{}", name);
 
                 quote!(
                     #(#cfgs)*
@@ -72,6 +73,8 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
 
                         unsafe {
                             let priority = &rtic::export::Priority::new(PRIORITY);
+                            #[cfg(feature = "profiling")]
+                            let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name).entered();
                             #name(
                                 #name::Context::new(priority)
                                 #(,#pats)*

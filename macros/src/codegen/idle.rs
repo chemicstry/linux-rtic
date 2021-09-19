@@ -61,9 +61,16 @@ pub fn codegen(
     } else {
         (
             vec![],
-            quote!(loop {
+            quote!(
+                let thread = std::thread::current();
+                ctrlc::set_handler(move || {
+                    println!("ctrl-c");
+                    thread.unpark();
+                }).expect("Failed to set ctrl-c handler");
+
                 std::thread::park();
-            }),
+                println!("term");
+            ),
         )
     }
 }

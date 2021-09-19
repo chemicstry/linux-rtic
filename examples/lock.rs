@@ -18,7 +18,7 @@ mod app {
     // when omitted priority is assumed to be `1`
     #[task(shared = [shared])]
     fn task1(mut c: task1::Context) {
-        println!("A");
+        //println!("A");
 
         // the lower priority task requires a critical section to access the data
         c.shared.shared.lock(|shared| {
@@ -28,7 +28,7 @@ mod app {
             // task2 will *not* run right now due to the critical section
             task2::spawn().unwrap();
 
-            println!("B - shared = {}", *shared);
+            //println!("B - shared = {}", *shared);
 
             // task3 does not contend for `shared` so it's allowed to run now
             task3::spawn().unwrap();
@@ -36,7 +36,7 @@ mod app {
 
         // critical section is over: GPIOB can now start
 
-        println!("E");
+        //println!("E");
     }
 
     #[task(priority = 2, shared = [shared])]
@@ -48,11 +48,11 @@ mod app {
             *shared
         });
 
-        println!("D - shared = {}", shared);
+        //println!("D - shared = {}", shared);
     }
 
     #[task(priority = 3)]
     fn task3(_: task3::Context) {
-        println!("C");
+        //println!("C");
     }
 }

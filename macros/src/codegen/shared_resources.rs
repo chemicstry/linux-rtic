@@ -78,6 +78,8 @@ pub fn codegen(
                 None => 0,
             };
 
+            let tracing_name = format!("shared_{}", name);
+
             mod_app.push(quote!(
                 #(#cfgs)*
                 impl<'a> rtic::Mutex for shared_resources::#name<'a> {
@@ -94,7 +96,11 @@ pub fn codegen(
                             mutex,
                             self.priority(),
                             CEILING,
-                            f,
+                            |res| {
+                                #[cfg(feature = "profiling")]
+                                let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name).entered();
+                                f(res)
+                            },
                         )
                     }
                 }

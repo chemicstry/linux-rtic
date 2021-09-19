@@ -1,6 +1,10 @@
+pub use ctrlc;
 pub use linux_rtic_macros::app;
 pub use rtic_core::{prelude as mutex_prelude, Exclusive, Mutex};
 use std::cell::UnsafeCell;
+
+#[cfg(feature = "profiling")]
+pub use tracing;
 
 /// Contains everything that is internally used after macro expansion
 pub mod export;
