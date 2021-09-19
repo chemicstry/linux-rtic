@@ -6,6 +6,8 @@ use std::cell::Cell;
 pub use pcp_mutex::PcpManager as MutexManager;
 pub use pcp_mutex::PcpMutex as Mutex;
 
+pub use flume as mpmc;
+
 // Queue that holds inputs of a single task
 pub type TaskInputQueue<T, const N: usize> = MpMcQueue<T, N>;
 

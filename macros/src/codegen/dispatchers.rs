@@ -37,13 +37,9 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
 
         let capacity_lit = util::capacity_literal(channel.capacity as usize);
         let rq = util::run_queue_ident(level);
-        let rq_send_ty = quote!(std::sync::mpsc::SyncSender<#spawn_enum>);
-        // Mutex is needed because mpsc::Receiver is not Sync, but we lock it only once in processing thread
-        let rq_recv_ty = quote!(std::sync::Mutex<std::sync::mpsc::Receiver<#spawn_enum>>);
-        let rq_expr = quote!({
-            let (send, recv) = std::sync::mpsc::sync_channel(#capacity_lit);
-            (send, std::sync::Mutex::new(recv))
-        });
+        let rq_send_ty = quote!(rtic::export::mpmc::Sender<#spawn_enum>);
+        let rq_recv_ty = quote!(rtic::export::mpmc::Receiver<#spawn_enum>);
+        let rq_expr = quote!(rtic::export::mpmc::bounded(#capacity_lit));
 
         stmts.push(quote!(
             #[doc(hidden)]
@@ -96,8 +92,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
 
                 rtic::export::set_current_thread_priority(PRIORITY).expect("Failed to set thread priority. Insufficient permissions?");
 
-                let rq = #rq.1.try_lock().unwrap();
-                while let Ok(task) = rq.recv() {
+                while let Ok(task) = #rq.1.recv() {
                     match task {
                         #(#arms)*,
                     }
