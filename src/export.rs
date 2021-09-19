@@ -2,6 +2,10 @@ use heapless::mpmc::MpMcQueue;
 pub use lazy_static::lazy_static;
 use std::cell::Cell;
 
+// Priority Ceiling Protocol mutexes
+pub use pcp_mutex::PcpMutex as Mutex;
+pub use pcp_mutex::PcpManager as MutexManager;
+
 // Queue that holds inputs of a single task
 pub type TaskInputQueue<T, const N: usize> = MpMcQueue<T, N>;
 
@@ -35,4 +39,22 @@ impl Priority {
     fn get(&self) -> u8 {
         self.inner.get()
     }
+}
+
+/// Lock the resource proxy by setting the BASEPRI
+/// and running the closure with interrupt::free
+#[inline(always)]
+pub fn lock<T, R>(
+    res: &Mutex<T>,
+    priority: &Priority,
+    _ceiling: u8,
+    f: impl FnOnce(&mut T) -> R,
+) -> R {
+    let current = priority.get();
+
+    // TODO: set priority to ceiling
+    let r = f(&mut res.lock(current));
+    // TODO: set priority to current
+
+    r
 }

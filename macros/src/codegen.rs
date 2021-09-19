@@ -12,6 +12,8 @@ mod shared_resources;
 mod shared_resources_struct;
 mod tasks;
 mod util;
+mod post_init;
+
 
 pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
     let app_name = &app.name;
@@ -23,6 +25,7 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
     let (idle_defs, call_idle) = idle::codegen(app, analysis);
     let tasks = tasks::codegen(app, analysis);
     let dispatchers = dispatchers::codegen(app, analysis);
+    let post_init = post_init::codegen(app, analysis);
 
     let mut spawn_threads = vec![];
     spawn_threads.push(quote!(
@@ -61,6 +64,7 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
             #[allow(unreachable_code)]
             pub unsafe fn run() {
                 #call_init
+                #(#post_init)*
                 #(#spawn_threads)*
                 #call_idle
             }

@@ -36,7 +36,8 @@ pub fn codegen(
             #[doc(hidden)]
             #(#attrs)*
             #(#cfgs)*
-            static #mangled_name: rtic::RacyCell<core::mem::MaybeUninit<#ty>> = rtic::RacyCell::new(core::mem::MaybeUninit::uninit());
+            static #mangled_name: rtic::RacyCell<core::mem::MaybeUninit<#ty>> =
+                rtic::RacyCell::new(core::mem::MaybeUninit::uninit());
         ));
     }
 

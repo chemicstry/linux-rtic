@@ -149,36 +149,3 @@ pub fn declared_static_local_resource_ident(name: &Ident, task_name: &Ident) -> 
         name.to_string()
     ))
 }
-
-/// Generates a `Mutex` implementation
-pub fn impl_mutex(
-    cfgs: &[Attribute],
-    resources_prefix: bool,
-    name: &Ident,
-    ty: TokenStream,
-    ceiling: u8,
-    ptr: TokenStream,
-) -> TokenStream {
-    let (path, priority) = if resources_prefix {
-        (quote!(shared_resources::#name), quote!(self.priority()))
-    } else {
-        (quote!(#name), quote!(self.priority))
-    };
-
-    quote!(
-        #(#cfgs)*
-        impl<'a> rtic::Mutex for #path<'a> {
-            type T = #ty;
-
-            #[inline(always)]
-            fn lock<RTIC_INTERNAL_R>(&mut self, f: impl FnOnce(&mut #ty) -> RTIC_INTERNAL_R) -> RTIC_INTERNAL_R {
-                /// Priority ceiling
-                const CEILING: u8 = #ceiling;
-
-                unsafe {
-                    
-                }
-            }
-        }
-    )
-}

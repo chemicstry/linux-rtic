@@ -35,7 +35,8 @@ pub fn codegen(
             #[doc(hidden)]
             #(#attrs)*
             #(#cfgs)*
-            static #mangled_name: rtic::RacyCell<core::mem::MaybeUninit<#ty>> = rtic::RacyCell::new(core::mem::MaybeUninit::uninit());
+            static #mangled_name: rtic::RacyCell<core::mem::MaybeUninit<rtic::export::Mutex<#ty>>>
+             = rtic::RacyCell::new(core::mem::MaybeUninit::uninit());
         ));
 
         // For future use
@@ -59,7 +60,7 @@ pub fn codegen(
                     }
 
                     #[inline(always)]
-                    pub unsafe fn priority(&self) -> &Priority {
+                    pub fn priority(&self) -> &Priority {
                         self.priority
                     }
                 }
@@ -77,16 +78,26 @@ pub fn codegen(
                 None => 0,
             };
 
-            // For future use
-            // let doc = format!(" RTIC internal ({} resource): {}:{}", doc, file!(), line!());
+            mod_app.push(quote!(
+                #(#cfgs)*
+                impl<'a> rtic::Mutex for shared_resources::#name<'a> {
+                    type T = #ty;
+        
+                    #[inline(always)]
+                    fn lock<RTIC_INTERNAL_R>(&mut self, f: impl FnOnce(&mut #ty) -> RTIC_INTERNAL_R) -> RTIC_INTERNAL_R {
+                        /// Priority ceiling
+                        const CEILING: u8 = #ceiling;
+        
+                        let mutex = unsafe { & *#ptr };
 
-            mod_app.push(util::impl_mutex(
-                cfgs,
-                true,
-                &name,
-                quote!(#ty),
-                ceiling,
-                ptr,
+                        rtic::export::lock(
+                            mutex,
+                            self.priority(),
+                            CEILING,
+                            f,
+                        )
+                    }
+                }
             ));
         }
     }

@@ -10,6 +10,8 @@ mod app {
 
     #[init]
     fn init(_: init::Context) -> (Shared, Local, init::Monotonics) {
+        task1::spawn().unwrap();
+
         (Shared { shared: 0 }, Local {}, init::Monotonics())
     }
 
@@ -24,12 +26,12 @@ mod app {
             *shared += 1;
 
             // task2 will *not* run right now due to the critical section
-            task2::spawn();
+            task2::spawn().unwrap();
 
             println!("B - shared = {}", *shared);
 
             // task3 does not contend for `shared` so it's allowed to run now
-            task3::spawn();
+            task3::spawn().unwrap();
         });
 
         // critical section is over: GPIOB can now start
