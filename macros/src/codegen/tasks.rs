@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use rtic_syntax::{analyze::Analysis, ast::App, Context};
 
-use crate::codegen::{module, util};
+use crate::codegen::{local_resources_struct, module, shared_resources_struct, util};
 
 pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
     let mut stmts = vec![];
@@ -42,8 +42,29 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
             ));
         }
 
-        let shared_needs_lt = false;
-        let local_needs_lt = false;
+        let mut shared_needs_lt = false;
+        let mut local_needs_lt = false;
+
+        // `${task}Locals`
+        if !task.args.local_resources.is_empty() {
+            let item = local_resources_struct::codegen(
+                Context::SoftwareTask(name),
+                &mut local_needs_lt,
+                app,
+            );
+
+            stmts.push(item);
+        }
+
+        if !task.args.shared_resources.is_empty() {
+            let item = shared_resources_struct::codegen(
+                Context::SoftwareTask(name),
+                &mut shared_needs_lt,
+                app,
+            );
+
+            stmts.push(item);
+        }
 
         // Generate task context struct and spawn function
         stmts.push(module::codegen(

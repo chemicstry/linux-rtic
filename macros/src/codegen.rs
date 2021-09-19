@@ -53,6 +53,11 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
             #(#init_defs)*
             #(#idle_defs)*
 
+            #mod_shared_resources
+            #mod_local_resources
+            #(#mod_app_shared_resources)*
+            #(#mod_app_local_resources)*
+
             #[allow(unreachable_code)]
             pub unsafe fn run() {
                 #call_init

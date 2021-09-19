@@ -176,13 +176,7 @@ pub fn impl_mutex(
                 const CEILING: u8 = #ceiling;
 
                 unsafe {
-                    rtic::export::lock(
-                        #ptr,
-                        #priority,
-                        CEILING,
-                        0 /*#device::NVIC_PRIO_BITS*/,
-                        f,
-                    )
+                    
                 }
             }
         }
