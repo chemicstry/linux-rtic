@@ -178,27 +178,31 @@ pub fn codegen(
         let input_queue = util::task_input_queue_ident(name);
 
         let internal_spawn_ident = util::internal_task_spawn_ident(name);
+        let tracing_name = format!("spawn_{}", name);
 
         // Spawn caller
         items.push(quote!(
+            #(#cfgs)*
+            /// Spawns the task directly
+            pub fn #internal_spawn_ident(#(#inputs_args,)*) -> Result<(), #inputs_ty> {
+                let input = #inputs_tupled;
 
-        #(#cfgs)*
-        /// Spawns the task directly
-        pub fn #internal_spawn_ident(#(#inputs_args,)*) -> Result<(), #inputs_ty> {
-            let input = #inputs_tupled;
+                unsafe {
+                    if #input_queue.enqueue(input).is_ok() {
+                        #[cfg(feature = "profiling")]
+                        rtic::tracing::trace!(#tracing_name);
 
-            unsafe {
-                if #input_queue.enqueue(input).is_ok() {
-                    // Should never fail if capacity calculations are correct
-                    #run_queue.0.try_send(#spawn_enum::#name).expect("Send queue full");
+                        // Should never fail if capacity calculations are correct
+                        #run_queue.0.try_send(#spawn_enum::#name).expect("Send queue full");
 
-                    Ok(())
-                } else {
-                    Err(input)
+                        Ok(())
+                    } else {
+                        Err(input)
+                    }
                 }
-            }
 
-        }));
+            }
+        ));
 
         module_items.push(quote!(
             #(#cfgs)*

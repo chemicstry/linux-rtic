@@ -6,13 +6,15 @@ mod app {
     }
 
     #[local]
-    struct Local {}
+    struct Local {
+        times: u32
+    }
 
     #[init]
     fn init(_: init::Context) -> (Shared, Local, init::Monotonics) {
         task1::spawn().unwrap();
 
-        (Shared { shared: 0 }, Local {}, init::Monotonics())
+        (Shared { shared: 0 }, Local { times: 0 }, init::Monotonics())
     }
 
     // when omitted priority is assumed to be `1`
@@ -42,7 +44,7 @@ mod app {
     #[task(priority = 2, shared = [shared])]
     fn task2(mut c: task2::Context) {
         // the higher priority task does still need a critical section
-        let shared = c.shared.shared.lock(|shared| {
+        let _shared = c.shared.shared.lock(|shared| {
             *shared += 1;
 
             *shared
@@ -54,5 +56,17 @@ mod app {
     #[task(priority = 3)]
     fn task3(_: task3::Context) {
         //println!("C");
+        task4::spawn().unwrap();
+    }
+
+    #[task(priority = 4, local = [times])]
+    fn task4(c: task4::Context) {
+        //println!("C");
+        std::thread::sleep(std::time::Duration::from_millis(1));
+
+        *c.local.times += 1;
+        if *c.local.times < 4 {
+            task1::spawn().unwrap();
+        }
     }
 }

@@ -64,12 +64,12 @@ pub fn codegen(
             quote!(
                 let thread = std::thread::current();
                 ctrlc::set_handler(move || {
-                    println!("ctrl-c");
+                    println!("ctrl-c signal");
                     thread.unpark();
                 }).expect("Failed to set ctrl-c handler");
 
                 std::thread::park();
-                println!("term");
+                println!("Terminating");
             ),
         )
     }
