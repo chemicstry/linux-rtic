@@ -1,6 +1,4 @@
-use heapless::mpmc::MpMcQueue;
-pub use lazy_static::lazy_static;
-use std::cell::Cell;
+pub use lazy_static;
 
 // Priority Ceiling Protocol mutexes
 pub use pcp_mutex::PcpManager as MutexManager;
@@ -8,8 +6,7 @@ pub use pcp_mutex::PcpMutex as Mutex;
 
 pub use flume as mpmc;
 
-// Queue that holds inputs of a single task
-pub type TaskInputQueue<T, const N: usize> = MpMcQueue<T, N>;
+use std::cell::Cell;
 
 // Newtype over `Cell` that forbids mutation through a shared reference
 pub struct Priority {

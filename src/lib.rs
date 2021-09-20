@@ -9,6 +9,8 @@ pub use tracing;
 /// Contains everything that is internally used after macro expansion
 pub mod export;
 
+pub mod slab;
+
 /// Internal replacement for `static mut T`
 #[repr(transparent)]
 pub struct RacyCell<T>(UnsafeCell<T>);

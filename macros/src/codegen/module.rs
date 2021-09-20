@@ -187,20 +187,18 @@ pub fn codegen(
             pub fn #internal_spawn_ident(#(#inputs_args,)*) -> Result<(), #inputs_ty> {
                 let input = #inputs_tupled;
 
-                unsafe {
-                    if #input_queue.enqueue(input).is_ok() {
+                match #input_queue.insert(input) {
+                    Ok(handle) => {
                         #[cfg(feature = "profiling")]
                         rtic::tracing::trace!(#tracing_name);
 
                         // Should never fail if capacity calculations are correct
-                        #run_queue.0.try_send(#spawn_enum::#name).expect("Send queue full");
+                        #run_queue.0.try_send((#spawn_enum::#name, handle)).expect("Send queue full");
 
                         Ok(())
-                    } else {
-                        Err(input)
-                    }
+                    },
+                    Err(input) => Err(input)
                 }
-
             }
         ));
 

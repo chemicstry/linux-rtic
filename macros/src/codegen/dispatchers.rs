@@ -37,15 +37,16 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
 
         let capacity_lit = util::capacity_literal(channel.capacity as usize);
         let rq = util::run_queue_ident(level);
-        let rq_send_ty = quote!(rtic::export::mpmc::Sender<#spawn_enum>);
-        let rq_recv_ty = quote!(rtic::export::mpmc::Receiver<#spawn_enum>);
+        let rq_send_ty = quote!(rtic::export::mpmc::Sender<(#spawn_enum, rtic::slab::SlabHandle)>);
+        let rq_recv_ty =
+            quote!(rtic::export::mpmc::Receiver<(#spawn_enum, rtic::slab::SlabHandle)>);
         let rq_expr = quote!(rtic::export::mpmc::bounded(#capacity_lit));
 
         stmts.push(quote!(
             #[doc(hidden)]
             #[allow(non_camel_case_types)]
             #[allow(non_upper_case_globals)]
-            rtic::export::lazy_static! {
+            rtic::export::lazy_static::lazy_static! {
                 static ref #rq: (#rq_send_ty, #rq_recv_ty) = #rq_expr;
             }
         ));
@@ -64,10 +65,8 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 quote!(
                     #(#cfgs)*
                     #spawn_enum::#name => {
-                        // Should never fail, because there is always one input item for each run queue item
-                        let #tupled = #input_queue.dequeue().unwrap();
-
                         unsafe {
+                            let #tupled = #input_queue.remove(handle);
                             let priority = &rtic::export::Priority::new(PRIORITY);
                             #[cfg(feature = "profiling")]
                             let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name).entered();
@@ -92,7 +91,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
 
                 rtic::export::set_current_thread_priority(PRIORITY).expect("Failed to set thread priority. Insufficient permissions?");
 
-                while let Ok(task) = #rq.1.recv() {
+                while let Ok((task, handle)) = #rq.1.recv() {
                     match task {
                         #(#arms)*,
                     }

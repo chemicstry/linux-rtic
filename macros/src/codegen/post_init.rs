@@ -15,6 +15,14 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
         let mutex_mgr = rtic::export::MutexManager::default();
     ));
 
+    // Initialize all lazy_static queues
+    for (name, _task) in &app.software_tasks {
+        let tiq_ident = util::task_input_queue_ident(name);
+        stmts.push(quote!(
+            rtic::export::lazy_static::initialize(&#tiq_ident);
+        ));
+    }
+
     // Initialize shared resources
     for (name, res) in &app.shared_resources {
         let mangled_name = util::static_shared_resource_ident(name);

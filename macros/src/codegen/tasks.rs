@@ -17,11 +17,13 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
         // Task Input Queue
         // Inputs for scheduled task are pushed into this queue
         let tiq_ident = util::task_input_queue_ident(name);
-        let tiq_ty = quote!(rtic::export::TaskInputQueue<#input_ty, #capacity_lit>);
-        let tiq_expr = quote!(rtic::export::TaskInputQueue::new());
+        let tiq_ty = quote!(rtic::slab::Slab<#input_ty, #capacity_lit>);
+        let tiq_expr = quote!(rtic::slab::Slab::new());
         stmts.push(quote!(
             /// Queue that holds inputs for queued task
-            static #tiq_ident: #tiq_ty = #tiq_expr;
+            rtic::export::lazy_static::lazy_static! {
+                static ref #tiq_ident: #tiq_ty = #tiq_expr;
+            }
         ));
 
         if !&task.is_extern {
