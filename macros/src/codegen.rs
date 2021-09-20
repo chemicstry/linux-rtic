@@ -12,6 +12,7 @@ mod post_init;
 mod shared_resources;
 mod shared_resources_struct;
 mod tasks;
+mod timer_queue;
 mod util;
 
 pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
@@ -37,8 +38,15 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
         ));
     }
 
+    // Spawn timer thread
+    let timer_thread_ident = util::timer_queue_thread_ident();
+    spawn_threads.push(quote!(
+        thread_handles.push(std::thread::spawn(#timer_thread_ident));
+    ));
+
     let (mod_app_shared_resources, mod_shared_resources) = shared_resources::codegen(app, analysis);
     let (mod_app_local_resources, mod_local_resources) = local_resources::codegen(app, analysis);
+    let mod_app_timer_queue = timer_queue::codegen(app, analysis);
 
     quote!(
         /// The RTIC application module
@@ -59,6 +67,7 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
             #mod_local_resources
             #(#mod_app_shared_resources)*
             #(#mod_app_local_resources)*
+            #(#mod_app_timer_queue)*
 
             #[allow(unreachable_code)]
             pub unsafe fn run() {

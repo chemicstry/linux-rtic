@@ -4,6 +4,7 @@ pub use lazy_static;
 pub use pcp_mutex::PcpManager as MutexManager;
 pub use pcp_mutex::PcpMutex as Mutex;
 
+pub use crate::tq::TimerQueue;
 pub use flume as mpmc;
 
 use std::cell::Cell;

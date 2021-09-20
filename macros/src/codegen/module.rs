@@ -173,12 +173,13 @@ pub fn codegen(
         let cfgs = &spawnee.cfgs;
         // Store a copy of the task cfgs
         task_cfgs = cfgs.clone();
-        let (inputs_args, inputs_tupled, _, inputs_ty) = util::regroup_inputs(&spawnee.inputs);
+        let (inputs_args, inputs_tupled, inputs_untupled, inputs_ty) =
+            util::regroup_inputs(&spawnee.inputs);
         let run_queue = util::run_queue_ident(priority);
         let input_queue = util::task_input_queue_ident(name);
 
         let internal_spawn_ident = util::internal_task_spawn_ident(name);
-        let tracing_name = format!("spawn_{}", name);
+        let profiling_ident = format!("spawn_{}", name);
 
         // Spawn caller
         items.push(quote!(
@@ -190,7 +191,7 @@ pub fn codegen(
                 match #input_queue.insert(input) {
                     Ok(handle) => {
                         #[cfg(feature = "profiling")]
-                        rtic::tracing::trace!(#tracing_name);
+                        rtic::tracing::trace!(#profiling_ident);
 
                         // Should never fail if capacity calculations are correct
                         #run_queue.0.try_send((#spawn_enum::#name, handle)).expect("Send queue full");
@@ -202,9 +203,61 @@ pub fn codegen(
             }
         ));
 
+        let tq_ident = util::timer_queue_ident();
+        let schedule_enum = util::schedule_task_ident();
+        let internal_spawn_at_ident = util::internal_task_spawn_at_ident(name);
+        let profiling_ident = format!("spawn_at_{}", name);
+
+        // Spawn at caller
+        items.push(quote!(
+            #(#cfgs)*
+            /// Spawns the task directly
+            pub fn #internal_spawn_at_ident(instant: rtic::time::Instant, #(#inputs_args,)*) -> Result<(), #inputs_ty> {
+                let input = #inputs_tupled;
+
+                match #input_queue.insert(input) {
+                    Ok(handle) => {
+                        #[cfg(feature = "profiling")]
+                        rtic::tracing::trace!(#profiling_ident);
+
+                        // Should never fail if capacity calculations are correct
+                        if #tq_ident.enqueue(rtic::tq::NotReady {
+                            handle,
+                            instant,
+                            task: #schedule_enum::#name
+                        }).is_err() {
+                            panic!("Timer queue full!");
+                        }
+
+                        Ok(())
+                    },
+                    Err(input) => Err(input)
+                }
+            }
+        ));
+
+        let internal_spawn_after_ident = util::internal_task_spawn_after_ident(name);
+        let profiling_ident = format!("spawn_after_{}", name);
+
+        // Spawn after caller
+        items.push(quote!(
+            #(#cfgs)*
+            /// Spawns the task directly
+            pub fn #internal_spawn_after_ident(dur: rtic::time::Duration, #(#inputs_args,)*) -> Result<(), #inputs_ty> {
+                let instant = rtic::time::Instant::now() + dur;
+
+                #[cfg(feature = "profiling")]
+                rtic::tracing::trace!(#profiling_ident);
+
+                #internal_spawn_at_ident(instant #(,#inputs_untupled)*)
+            }
+        ));
+
         module_items.push(quote!(
             #(#cfgs)*
             pub use super::#internal_spawn_ident as spawn;
+            pub use super::#internal_spawn_at_ident as spawn_at;
+            pub use super::#internal_spawn_after_ident as spawn_after;
         ));
     }
 

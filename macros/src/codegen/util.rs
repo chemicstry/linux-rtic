@@ -43,6 +43,16 @@ pub fn internal_task_spawn_ident(task: &Ident) -> Ident {
     mark_internal_name(&format!("{}_spawn", task.to_string()))
 }
 
+/// Generate an internal identifier for task spawn at function
+pub fn internal_task_spawn_at_ident(task: &Ident) -> Ident {
+    mark_internal_name(&format!("{}_spawn_at", task.to_string()))
+}
+
+/// Generate an internal identifier for task spawn after function
+pub fn internal_task_spawn_after_ident(task: &Ident) -> Ident {
+    mark_internal_name(&format!("{}_spawn_after", task.to_string()))
+}
+
 /// Generates a pre-reexport identifier for the "shared resources" struct
 pub fn shared_resources_ident(ctxt: Context, app: &App) -> Ident {
     let mut s = match ctxt {
@@ -148,4 +158,19 @@ pub fn declared_static_local_resource_ident(name: &Ident, task_name: &Ident) -> 
         task_name.to_string(),
         name.to_string()
     ))
+}
+
+/// Generates an identifier for the `enum` of `schedule`-able tasks
+pub fn schedule_task_ident() -> Ident {
+    Ident::new(&"SCHED_T", Span::call_site())
+}
+
+/// Generates an identifier for a timer queue
+pub fn timer_queue_ident() -> Ident {
+    mark_internal_name("TimerQueue")
+}
+
+/// Generates an identifier for a timer queue
+pub fn timer_queue_thread_ident() -> Ident {
+    mark_internal_name("timer_queue_thread")
 }

@@ -10,6 +10,8 @@ pub use tracing;
 pub mod export;
 
 pub mod slab;
+pub mod time;
+pub mod tq;
 
 /// Internal replacement for `static mut T`
 #[repr(transparent)]
