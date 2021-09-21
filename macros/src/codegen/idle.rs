@@ -63,7 +63,7 @@ pub fn codegen(
             vec![],
             quote!(
                 let thread = std::thread::current();
-                ctrlc::set_handler(move || {
+                rtic::ctrlc::set_handler(move || {
                     println!("ctrl-c signal");
                     thread.unpark();
                 }).expect("Failed to set ctrl-c handler");

@@ -5,6 +5,10 @@ use std::cell::UnsafeCell;
 
 #[cfg(feature = "profiling")]
 pub use tracing;
+#[cfg(feature = "profiling")]
+pub use tracing_chrome;
+#[cfg(feature = "profiling")]
+pub use tracing_subscriber;
 
 /// Contains everything that is internally used after macro expansion
 pub mod export;
