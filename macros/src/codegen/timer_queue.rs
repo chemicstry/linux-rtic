@@ -4,6 +4,8 @@ use rtic_syntax::{analyze::Analysis, ast::App};
 
 use crate::codegen::util;
 
+const TIMER_PRIORITY: u8 = 50;
+
 /// Generates timer queues and timer queue handlers
 pub fn codegen(app: &App, _analysis: &Analysis) -> Vec<TokenStream> {
     let mut items = vec![];
@@ -79,6 +81,11 @@ pub fn codegen(app: &App, _analysis: &Analysis) -> Vec<TokenStream> {
     items.push(quote!(
         #[allow(non_snake_case)]
         fn #thread_ident() {
+            /// The priority of this thread
+            const PRIORITY: u8 = #TIMER_PRIORITY;
+
+            rtic::export::set_current_thread_priority(PRIORITY).expect("Failed to set thread priority. Insufficient permissions?");
+
             loop {
                 while let Some(nr) = #tq_ident.dequeue() {
                     let handle = nr.handle;
