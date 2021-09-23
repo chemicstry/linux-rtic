@@ -13,7 +13,7 @@ mod app {
         (Shared {}, Local {}, init::Monotonics())
     }
 
-    #[task()]
+    #[task]
     fn foo(_c: foo::Context, x: i32, y: u32) {
         println!("foo {}, {}", x, y);
         if x < 4 {

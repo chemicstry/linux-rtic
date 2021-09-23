@@ -80,11 +80,14 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
 
         fn main() {
             #[cfg(feature = "profiling")]
-            use rtic::tracing_subscriber::prelude::*;
-            #[cfg(feature = "profiling")]
-            let (chrome_layer, guard) = rtic::tracing_chrome::ChromeLayerBuilder::new().build();
-            #[cfg(feature = "profiling")]
-            rtic::tracing_subscriber::registry().with(chrome_layer).init();
+            let _guard = {
+                use rtic::tracing_subscriber::prelude::*;
+                let (chrome_layer, guard) = rtic::tracing_chrome::ChromeLayerBuilder::new().build();
+                let fmt_layer = rtic::tracing_subscriber::fmt::layer().with_target(false);
+                let filter_layer = rtic::tracing_subscriber::EnvFilter::from_default_env();
+                rtic::tracing_subscriber::registry().with(chrome_layer).with(filter_layer).with(fmt_layer).init();
+                guard
+            };
 
             unsafe { #app_name::run(); }
         }

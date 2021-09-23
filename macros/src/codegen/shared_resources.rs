@@ -79,6 +79,7 @@ pub fn codegen(
             };
 
             let tracing_name = format!("shared_{}", name);
+            let tracing_name_locked = format!("shared_{}_locked", name);
 
             mod_app.push(quote!(
                 #(#cfgs)*
@@ -92,16 +93,37 @@ pub fn codegen(
 
                         let mutex = unsafe { & *#ptr };
 
-                        rtic::export::lock(
+                        #[cfg(feature = "profiling")]
+                        let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name).entered();
+
+                        #[cfg(feature = "profiling")]
+                        rtic::tracing::trace!("locking");
+
+                        let r = rtic::export::lock(
                             mutex,
                             self.priority(),
                             CEILING,
                             |res| {
                                 #[cfg(feature = "profiling")]
-                                let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name).entered();
-                                f(res)
+                                let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name_locked).entered();
+
+                                #[cfg(feature = "profiling")]
+                                rtic::tracing::trace!("locked");
+
+                                // Execute user closure with the resource reference
+                                let r = f(res);
+
+                                #[cfg(feature = "profiling")]
+                                rtic::tracing::trace!("unlocking");
+
+                                r
                             },
-                        )
+                        );
+
+                        #[cfg(feature = "profiling")]
+                        rtic::tracing::trace!("unlocked");
+
+                        r
                     }
                 }
             ));

@@ -65,10 +65,13 @@ pub fn codegen(app: &App, _analysis: &Analysis) -> Vec<TokenStream> {
             let priority = task.args.priority;
             let rq = util::run_queue_ident(priority);
             let spawn_enum = util::spawn_enum_ident(priority);
+            let tracing_name = format!("{}::{}", spawn_enum, name);
 
             quote!(
                 #(#cfgs)*
                 #schedule_enum::#name => {
+                    #[cfg(feature = "profiling")]
+                    rtic::tracing::trace!("Timer spawning {}", #tracing_name);
                     // Should never fail if capacity calculations are correct
                     #rq.0.try_send((#spawn_enum::#name, handle)).unwrap();
                 }

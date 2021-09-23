@@ -179,7 +179,6 @@ pub fn codegen(
         let input_queue = util::task_input_queue_ident(name);
 
         let internal_spawn_ident = util::internal_task_spawn_ident(name);
-        let profiling_ident = format!("spawn_{}", name);
 
         // Spawn caller
         items.push(quote!(
@@ -191,7 +190,7 @@ pub fn codegen(
                 match #input_queue.insert(input) {
                     Ok(handle) => {
                         #[cfg(feature = "profiling")]
-                        rtic::tracing::trace!(#profiling_ident);
+                        rtic::tracing::trace!("spawn {}", stringify!(#name));
 
                         // Should never fail if capacity calculations are correct
                         #run_queue.0.try_send((#spawn_enum::#name, handle)).expect("Send queue full");
@@ -206,7 +205,6 @@ pub fn codegen(
         let tq_ident = util::timer_queue_ident();
         let schedule_enum = util::schedule_task_ident();
         let internal_spawn_at_ident = util::internal_task_spawn_at_ident(name);
-        let profiling_ident = format!("spawn_at_{}", name);
 
         // Spawn at caller
         items.push(quote!(
@@ -218,7 +216,7 @@ pub fn codegen(
                 match #input_queue.insert(input) {
                     Ok(handle) => {
                         #[cfg(feature = "profiling")]
-                        rtic::tracing::trace!(#profiling_ident);
+                        rtic::tracing::trace!("schedule {} at {:?}", stringify!(#name), instant);
 
                         // Should never fail if capacity calculations are correct
                         if #tq_ident.enqueue(rtic::tq::NotReady {
@@ -237,7 +235,6 @@ pub fn codegen(
         ));
 
         let internal_spawn_after_ident = util::internal_task_spawn_after_ident(name);
-        let profiling_ident = format!("spawn_after_{}", name);
 
         // Spawn after caller
         items.push(quote!(
@@ -247,7 +244,7 @@ pub fn codegen(
                 let instant = rtic::time::Instant::now() + dur;
 
                 #[cfg(feature = "profiling")]
-                rtic::tracing::trace!(#profiling_ident);
+                rtic::tracing::trace!("schedule {} after {:?}", stringify!(#name), dur);
 
                 #internal_spawn_at_ident(instant #(,#inputs_untupled)*)
             }

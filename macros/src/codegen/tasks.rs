@@ -11,7 +11,11 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
         let inputs = &task.inputs;
         let (_, _, _, input_ty) = util::regroup_inputs(inputs);
 
-        let capacity = task.args.capacity.checked_next_power_of_two().expect("task capacity too high");
+        let capacity = task
+            .args
+            .capacity
+            .checked_next_power_of_two()
+            .expect("task capacity too high");
         let capacity_lit = util::capacity_literal(capacity as usize);
 
         // Task Input Queue

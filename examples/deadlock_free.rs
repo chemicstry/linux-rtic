@@ -17,10 +17,7 @@ mod app {
         task1::spawn_after(Duration::from_millis(100)).unwrap();
         task2::spawn_after(Duration::from_millis(200)).unwrap();
 
-        (Shared {
-            a: 0,
-            b: 0,
-        }, Local {}, init::Monotonics())
+        (Shared { a: 0, b: 0 }, Local {}, init::Monotonics())
     }
 
     #[task(priority = 1, shared = [a, b])]

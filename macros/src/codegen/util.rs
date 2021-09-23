@@ -20,6 +20,11 @@ pub fn run_queue_ident(priority: u8) -> Ident {
     mark_internal_name(&format!("P{}_run_queue", priority))
 }
 
+/// Identifier for the barrier which wait for all threads to be initialized
+pub fn thread_init_barrier() -> Ident {
+    mark_internal_name(&format!("thread_init_barrier"))
+}
+
 /// Generates an identifier for a thread that executes tasks at a given priority level
 pub fn thread_ident(priority: u8) -> Ident {
     mark_internal_name(&format!("thread_P{}", priority))
