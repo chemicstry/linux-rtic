@@ -1,43 +1,31 @@
 use crate::time::Instant;
 use heapless::{binary_heap::Min, BinaryHeap};
-use std::{cmp::Ordering, sync::Mutex};
+use std::{cmp::Ordering, sync::{Mutex, atomic::{self, AtomicI32}}};
 
 pub struct TimerQueue<T: Copy, const N: usize> {
     queue: Mutex<BinaryHeap<NotReady<T>, Min, N>>,
-    timer_fd: libc::c_int,
+    waiting_thread: AtomicI32,
 }
 
 impl<T: Copy, const N: usize> TimerQueue<T, N> {
-    pub fn new() -> Result<Self, i32> {
-        let res = unsafe { libc::timerfd_create(libc::CLOCK_MONOTONIC, 0) };
-
-        if res > 0 {
-            Ok(Self {
+    pub fn new() -> Self {
+        Self {
                 queue: Mutex::new(BinaryHeap::default()),
-                timer_fd: res,
-            })
-        } else {
-            Err(res)
-        }
+                waiting_thread: Default::default(),
+            }
     }
 
     pub fn enqueue(&self, nr: NotReady<T>) -> Result<(), NotReady<T>> {
         let mut queue = self.queue.lock().unwrap();
 
-        let rearm = if queue
-            .peek()
+        let rearm = queue.peek()
             .map(|head| nr.instant < head.instant)
-            .unwrap_or(true)
-        {
-            Some(nr.instant)
-        } else {
-            None
-        };
+            .unwrap_or(true);
 
         match queue.push(nr) {
             Ok(_) => {
-                if let Some(instant) = rearm {
-                    self.set(instant).expect("Error setting timer");
+                if rearm {
+                    self.wake();
                 }
 
                 Ok(())
@@ -53,7 +41,6 @@ impl<T: Copy, const N: usize> TimerQueue<T, N> {
             if nr.instant <= Instant::now() {
                 Some(unsafe { queue.pop_unchecked() })
             } else {
-                self.set(nr.instant).expect("Error setting timer");
                 None
             }
         } else {
@@ -61,40 +48,31 @@ impl<T: Copy, const N: usize> TimerQueue<T, N> {
         }
     }
 
-    /// Blocks the current thread until the timer expires
-    pub fn wait(&self) {
-        let mut buf: u64 = 0;
-        unsafe {
-            libc::read(
-                self.timer_fd,
-                (&mut buf as *mut u64) as *mut libc::c_void,
-                core::mem::size_of::<u64>(),
-            );
+    // Wakes the waiting thread, blocked on wait function
+    pub fn wake(&self) {
+        let thread = self.waiting_thread.load(atomic::Ordering::Relaxed);
+        if thread != 0 {
+            unsafe {
+                libc::kill(thread, libc::SIGUSR1);
+            }
         }
     }
 
-    fn set(&self, instant: Instant) -> Result<(), i32> {
-        let itimerspec = libc::itimerspec {
-            it_interval: libc::timespec {
-                tv_sec: 0,
-                tv_nsec: 0,
-            },
-            it_value: instant.into(),
-        };
+    /// Blocks the current thread until the timer expires
+    pub fn wait(&self) {
+        if self.waiting_thread.load(atomic::Ordering::Relaxed) == 0 {
+            let pid = unsafe { libc::getpid() };
+            self.waiting_thread.store(pid, atomic::Ordering::Relaxed);
+        }
 
-        let res = unsafe {
-            libc::timerfd_settime(
-                self.timer_fd,
-                libc::TFD_TIMER_ABSTIME,
-                &itimerspec,
-                0 as *mut libc::itimerspec,
-            )
-        };
+        let instant = self.queue.lock().unwrap().peek().map(|r| r.instant.into()).unwrap_or(libc::timespec {
+            // If there are no active timers, sleep until about December 4th, 292,277,026,596 AD 20:10:55 UTC
+            tv_sec: i64::MAX,
+            tv_nsec: 0,
+        });
 
-        if res == 0 {
-            Ok(())
-        } else {
-            Err(res)
+        unsafe {
+            libc::clock_nanosleep(libc::CLOCK_MONOTONIC, libc::TIMER_ABSTIME, &instant.into(), 0 as _);
         }
     }
 }

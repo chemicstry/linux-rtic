@@ -54,13 +54,14 @@ mod app {
     #[task(priority = 1, shared = [res])]
     fn task1(mut cx: task1::Context) {
         println!("task1!");
+        task2::spawn_after(Duration::from_millis(50)).unwrap();
 
         cx.shared.res.lock(|_res| {
             println!("task1 prime 1000000: {}", nth_prime(1000000).unwrap());
         });
     }
 
-    #[task(priority = 2)]
+    #[task(priority = 2, capacity = 2)]
     fn task2(_cx: task2::Context) {
         println!("task2!");
 

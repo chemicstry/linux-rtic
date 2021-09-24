@@ -53,7 +53,7 @@ pub fn codegen(app: &App, _analysis: &Analysis) -> Vec<TokenStream> {
         #[allow(non_camel_case_types)]
         #[allow(non_upper_case_globals)]
         rtic::export::lazy_static::lazy_static! {
-            static ref #tq_ident: rtic::tq::TimerQueue<#schedule_enum, #cap_lit> = rtic::tq::TimerQueue::new().expect("Error creating timer queue");
+            static ref #tq_ident: rtic::tq::TimerQueue<#schedule_enum, #cap_lit> = rtic::tq::TimerQueue::new();
         }
     ));
 
