@@ -49,18 +49,18 @@ pub fn codegen(
                 #[allow(non_camel_case_types)]
                 #(#cfgs)*
                 pub struct #name<'a> {
-                    priority: &'a Priority,
+                    priority: &'a ThreadPriority,
                 }
 
                 #(#cfgs)*
                 impl<'a> #name<'a> {
                     #[inline(always)]
-                    pub unsafe fn new(priority: &'a Priority) -> Self {
+                    pub unsafe fn new(priority: &'a ThreadPriority) -> Self {
                         #name { priority }
                     }
 
                     #[inline(always)]
-                    pub fn priority(&self) -> &Priority {
+                    pub fn priority(&self) -> &ThreadPriority {
                         self.priority
                     }
                 }
@@ -99,26 +99,21 @@ pub fn codegen(
                         #[cfg(feature = "profiling")]
                         rtic::tracing::trace!("locking");
 
-                        let r = rtic::export::lock(
-                            mutex,
-                            self.priority(),
-                            CEILING,
-                            |res| {
-                                #[cfg(feature = "profiling")]
-                                let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name_locked).entered();
+                        let r = mutex.lock(self.priority(), |res| {
+                            #[cfg(feature = "profiling")]
+                            let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name_locked).entered();
 
-                                #[cfg(feature = "profiling")]
-                                rtic::tracing::trace!("locked");
+                            #[cfg(feature = "profiling")]
+                            rtic::tracing::trace!("locked");
 
-                                // Execute user closure with the resource reference
-                                let r = f(res);
+                            // Execute user closure with the resource reference
+                            let r = f(res);
 
-                                #[cfg(feature = "profiling")]
-                                rtic::tracing::trace!("unlocking");
+                            #[cfg(feature = "profiling")]
+                            rtic::tracing::trace!("unlocking");
 
-                                r
-                            },
-                        );
+                            r
+                        });
 
                         #[cfg(feature = "profiling")]
                         rtic::tracing::trace!("unlocked");
@@ -134,7 +129,7 @@ pub fn codegen(
         quote!()
     } else {
         quote!(mod shared_resources {
-            use rtic::export::Priority;
+            use rtic::export::ThreadPriority;
 
             #(#mod_resources)*
         })

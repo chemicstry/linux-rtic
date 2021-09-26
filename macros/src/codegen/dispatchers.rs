@@ -49,10 +49,13 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
 
         let capacity_lit = util::capacity_literal(channel.capacity as usize);
         let rq = util::run_queue_ident(level);
-        let rq_send_ty = quote!(rtic::export::mpmc::Sender<(#spawn_enum, rtic::slab::SlabHandle)>);
+        let rq_send_ty = quote!(rtic::export::mpsc::Sender<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>);
         let rq_recv_ty =
-            quote!(rtic::export::mpmc::Receiver<(#spawn_enum, rtic::slab::SlabHandle)>);
-        let rq_expr = quote!(rtic::export::mpmc::bounded(#capacity_lit));
+            quote!(std::sync::Mutex<rtic::export::mpsc::Receiver<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>>);
+        let rq_expr = quote!({
+            let (tx, rx) = rtic::export::mpsc::FutexQueue::new();
+            (tx, std::sync::Mutex::new(rx))
+        });
 
         stmts.push(quote!(
             #[doc(hidden)]
@@ -79,7 +82,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                     #spawn_enum::#name => {
                         unsafe {
                             let #tupled = #input_queue.remove(handle);
-                            let priority = &rtic::export::Priority::new(PRIORITY);
+
                             #[cfg(feature = "profiling")]
                             let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #span_name).entered();
 
@@ -87,7 +90,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                             rtic::tracing::trace!("running");
 
                             #name(
-                                #name::Context::new(priority)
+                                #name::Context::new(&priority)
                                 #(,#pats)*
                             )
                         }
@@ -105,7 +108,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 /// The priority of this thread
                 const PRIORITY: u8 = #level;
 
-                rtic::export::set_current_thread_priority(PRIORITY).expect("Failed to set thread priority. Insufficient permissions?");
+                let priority = rtic::export::ThreadPriority::init_fifo(PRIORITY).expect("Error setting thread priority");
 
                 #[cfg(feature = "profiling")]
                 rtic::tracing::trace!("thread {} waiting for init barrier", stringify!(#thread_ident));
@@ -116,7 +119,9 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 #[cfg(feature = "profiling")]
                 rtic::tracing::trace!("thread {} running", stringify!(#thread_ident));
 
-                while let Ok((task, handle)) = #rq.1.recv() {
+                let mut rx = #rq.1.lock().unwrap();
+                while let item = rx.recv() {
+                    let (task, handle) = item.into_value();
                     match task {
                         #(#arms)*,
                     }

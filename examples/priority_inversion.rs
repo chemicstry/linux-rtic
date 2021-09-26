@@ -1,6 +1,6 @@
 #[rtic::app]
 mod app {
-    use rtic::time::Duration;
+    use std::time::Duration;
 
     pub fn nth_prime(n: u32) -> Option<u64> {
         if n < 1 {

@@ -136,7 +136,7 @@ pub fn codegen(
     let priority = if ctxt.is_init() {
         None
     } else {
-        Some(quote!(priority: &#lt rtic::export::Priority))
+        Some(quote!(priority: &#lt rtic::export::ThreadPriority))
     };
 
     let internal_context_name = util::internal_task_context_ident(name);
@@ -193,7 +193,9 @@ pub fn codegen(
                         rtic::tracing::trace!("spawn {}", stringify!(#name));
 
                         // Should never fail if capacity calculations are correct
-                        #run_queue.0.try_send((#spawn_enum::#name, handle)).expect("Send queue full");
+                        if #run_queue.0.send((#spawn_enum::#name, handle)).is_err() {
+                            panic!("Run queue full!");
+                        }
 
                         Ok(())
                     },
@@ -202,15 +204,13 @@ pub fn codegen(
             }
         ));
 
-        let tq_ident = util::timer_queue_ident();
-        let schedule_enum = util::schedule_task_ident();
         let internal_spawn_at_ident = util::internal_task_spawn_at_ident(name);
 
         // Spawn at caller
         items.push(quote!(
             #(#cfgs)*
             /// Spawns the task directly
-            pub fn #internal_spawn_at_ident(instant: rtic::time::Instant, #(#inputs_args,)*) -> Result<(), #inputs_ty> {
+            pub fn #internal_spawn_at_ident(instant: std::time::Instant, #(#inputs_args,)*) -> Result<(), #inputs_ty> {
                 let input = #inputs_tupled;
 
                 match #input_queue.insert(input) {
@@ -219,12 +219,8 @@ pub fn codegen(
                         rtic::tracing::trace!("schedule {} at {:?}", stringify!(#name), instant);
 
                         // Should never fail if capacity calculations are correct
-                        if #tq_ident.enqueue(rtic::tq::NotReady {
-                            handle,
-                            instant,
-                            task: #schedule_enum::#name
-                        }).is_err() {
-                            panic!("Timer queue full!");
+                        if #run_queue.0.send_scheduled((#spawn_enum::#name, handle), instant).is_err() {
+                            panic!("Schedule queue full!");
                         }
 
                         Ok(())
@@ -240,8 +236,8 @@ pub fn codegen(
         items.push(quote!(
             #(#cfgs)*
             /// Spawns the task directly
-            pub fn #internal_spawn_after_ident(dur: rtic::time::Duration, #(#inputs_args,)*) -> Result<(), #inputs_ty> {
-                let instant = rtic::time::Instant::now() + dur;
+            pub fn #internal_spawn_after_ident(dur: std::time::Duration, #(#inputs_args,)*) -> Result<(), #inputs_ty> {
+                let instant = std::time::Instant::now() + dur;
 
                 #[cfg(feature = "profiling")]
                 rtic::tracing::trace!("schedule {} after {:?}", stringify!(#name), dur);

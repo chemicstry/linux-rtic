@@ -164,18 +164,3 @@ pub fn declared_static_local_resource_ident(name: &Ident, task_name: &Ident) -> 
         name.to_string()
     ))
 }
-
-/// Generates an identifier for the `enum` of `schedule`-able tasks
-pub fn schedule_task_ident() -> Ident {
-    Ident::new(&"SCHED_T", Span::call_site())
-}
-
-/// Generates an identifier for a timer queue
-pub fn timer_queue_ident() -> Ident {
-    mark_internal_name("TimerQueue")
-}
-
-/// Generates an identifier for a timer queue
-pub fn timer_queue_thread_ident() -> Ident {
-    mark_internal_name("timer_queue_thread")
-}
