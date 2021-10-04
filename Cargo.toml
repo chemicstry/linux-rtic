@@ -13,13 +13,13 @@ linux-rtic-macros = { path = "macros" }
 rtic-core = "0.3.1"
 heapless = "0.7"
 lazy_static = "1.4"
-pcp_mutex = { path = "../pcp_mutex" }
+pcp-mutex = { path = "../pcp_mutex" }
 libc = "0.2"
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.2", optional = true }
 tracing-chrome = { version = "0.3", optional = true }
 ctrlc = "3.2"
-futex-queue = { path = "../futex_queue" }
+futex-queue = "0.1"
 
 [features]
 # Enables SRP protocol on top of PCP

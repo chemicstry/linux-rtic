@@ -37,6 +37,7 @@ mod app {
     #[shared]
     struct Shared {
         res: u32,
+        res2: u32,
     }
 
     #[local]
@@ -47,21 +48,23 @@ mod app {
         task1::spawn_after(Duration::from_millis(0)).unwrap();
         task3::spawn_after(Duration::from_millis(100)).unwrap();
         task2::spawn_after(Duration::from_millis(200)).unwrap();
+        task2_1::spawn_after(Duration::from_millis(300)).unwrap();
+        task2_3::spawn_after(Duration::from_millis(400)).unwrap();
+        task2_2::spawn_after(Duration::from_millis(500)).unwrap();
 
-        (Shared { res: 0 }, Local {}, init::Monotonics())
+        (Shared { res: 0, res2: 0 }, Local {}, init::Monotonics())
     }
 
     #[task(priority = 1, shared = [res])]
     fn task1(mut cx: task1::Context) {
         println!("task1!");
-        task2::spawn_after(Duration::from_millis(50)).unwrap();
 
         cx.shared.res.lock(|_res| {
             println!("task1 prime 1000000: {}", nth_prime(1000000).unwrap());
         });
     }
 
-    #[task(priority = 2, capacity = 2)]
+    #[task(priority = 2)]
     fn task2(_cx: task2::Context) {
         println!("task2!");
 
@@ -74,6 +77,32 @@ mod app {
 
         cx.shared.res.lock(|_res| {
             println!("task3 prime 1000002: {}", nth_prime(1000002).unwrap());
+        });
+    }
+
+    #[task(priority = 4, shared = [res2])]
+    fn task2_1(mut cx: task2_1::Context) {
+        println!("task2_1!");
+
+        cx.shared.res2.lock(|_res| {
+            println!("task2_1 prime 1000000: {}", nth_prime(1000000).unwrap());
+        });
+    }
+
+    #[task(priority = 5)]
+    fn task2_2(_cx: task2_2::Context) {
+        println!("task2_2!");
+
+        println!("task2_2 prime 1000001: {}", nth_prime(1000001).unwrap());
+    }
+
+    #[task(priority = 6, shared = [res2])]
+    fn task2_3(mut cx: task2_3::Context) {
+        println!("task2_3!");
+
+        cx.shared.res2.lock(|_res| {
+            std::thread::sleep(Duration::from_millis(5000));
+            println!("task2_3 prime 1000002: {}", nth_prime(1000002).unwrap());
         });
     }
 }
