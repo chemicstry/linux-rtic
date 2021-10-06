@@ -1,9 +1,16 @@
 [package]
 name = "linux-rtic"
 version = "0.1.0"
+authors = ["Jurgis Balčiūnas <chemicstry@gmail.com>"]
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "A Real-Time Interrupt-driven Concurrency (RTIC) implementation for Linux"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/chemicstry/linux-rtic"
+homepage = "https://github.com/chemicstry/linux-rtic"
+documentation = "https://docs.rs/linux-rtic"
+keywords = ["thread", "concurrency", "linux"]
+categories = ["concurrency", "data-structures"]
+readme = "README.md"
 
 [lib]
 name = "rtic"
