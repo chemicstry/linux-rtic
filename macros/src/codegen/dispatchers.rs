@@ -50,8 +50,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
         let capacity_lit = util::capacity_literal(channel.capacity as usize);
         let rq = util::run_queue_ident(level);
         let rq_send_ty = quote!(rtic::export::mpsc::Sender<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>);
-        let rq_recv_ty =
-            quote!(std::sync::Mutex<rtic::export::mpsc::Receiver<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>>);
+        let rq_recv_ty = quote!(std::sync::Mutex<rtic::export::mpsc::Receiver<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>>);
         let rq_expr = quote!({
             let (tx, rx) = rtic::export::mpsc::FutexQueue::new();
             (tx, std::sync::Mutex::new(rx))
@@ -90,7 +89,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                             rtic::tracing::trace!("running");
 
                             #name(
-                                #name::Context::new(&priority)
+                                #name::Context::new(&thread_state)
                                 #(,#pats)*
                             )
                         }
@@ -108,7 +107,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 /// The priority of this thread
                 const PRIORITY: u8 = #level;
 
-                let priority = rtic::export::ThreadPriority::init_fifo(PRIORITY).expect("Error setting thread priority");
+                let thread_state = rtic::export::ThreadState::init_fifo(PRIORITY).expect("Error setting thread priority");
 
                 #[cfg(feature = "profiling")]
                 rtic::tracing::trace!("thread {} waiting for init barrier", stringify!(#thread_ident));

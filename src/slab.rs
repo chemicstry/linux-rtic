@@ -44,6 +44,8 @@ impl<T, const N: usize> Slab<T, N> {
         }
     }
 
+    /// # Safety
+    ///
     /// The returned handle must belong to this slab. TODO: ensure this statically?
     pub unsafe fn remove(&self, handle: SlabHandle) -> T {
         let item = (*self.slots.get())[handle.0].as_ptr().read();

@@ -11,10 +11,6 @@ use crate::codegen::util;
 pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
     let mut stmts = vec![];
 
-    stmts.push(quote!(
-        let mutex_mgr = rtic::export::MutexManager::default();
-    ));
-
     // Initialize all lazy_static queues
     for (name, _task) in &app.software_tasks {
         let tiq_ident = util::task_input_queue_ident(name);
@@ -43,7 +39,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 // - `get_mut_unchecked` to obtain `MaybeUninit<T>`
                 // - `as_mut_ptr` to obtain a raw pointer to `MaybeUninit<T>`
                 // - `write` the defined value for the late resource T
-                #mangled_name.get_mut_unchecked().as_mut_ptr().write(mutex_mgr.create(shared_resources.#name, #ceiling));
+                #mangled_name.get_mut_unchecked().as_mut_ptr().write(rtic::export::PcpMutex::new(shared_resources.#name, #ceiling));
             ));
         }
     }
@@ -65,22 +61,6 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
             ));
         }
     }
-
-    // for (i, (monotonic, _)) in app.monotonics.iter().enumerate() {
-    //     // For future use
-    //     // let doc = format!(" RTIC internal: {}:{}", file!(), line!());
-    //     // stmts.push(quote!(#[doc = #doc]));
-
-    //     let idx = Index {
-    //         index: i as u32,
-    //         span: Span::call_site(),
-    //     };
-    //     stmts.push(quote!(monotonics.#idx.reset();));
-
-    //     // Store the monotonic
-    //     let name = util::monotonic_ident(&monotonic.to_string());
-    //     stmts.push(quote!(*#name.get_mut_unchecked() = Some(monotonics.#idx);));
-    // }
 
     stmts
 }

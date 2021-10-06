@@ -1,7 +1,7 @@
 #[rtic::app]
 mod app {
-    use rtic::time::Duration;
     use std::thread::sleep;
+    use std::time::Duration;
 
     #[shared]
     struct Shared {

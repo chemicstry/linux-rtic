@@ -1,16 +1,13 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use rtic_syntax::{
-    analyze::{Analysis, Ownership},
-    ast::App,
-};
+use rtic_syntax::{analyze::Analysis, ast::App};
 
 use crate::codegen::util;
 
 /// Generates `static` variables and shared resource proxies
 pub fn codegen(
     app: &App,
-    analysis: &Analysis,
+    _analysis: &Analysis,
 ) -> (
     // mod_app -- the `static` variables behind the proxies
     Vec<TokenStream>,
@@ -35,7 +32,7 @@ pub fn codegen(
             #[doc(hidden)]
             #(#attrs)*
             #(#cfgs)*
-            static #mangled_name: rtic::RacyCell<core::mem::MaybeUninit<rtic::export::Mutex<#ty>>>
+            static #mangled_name: rtic::RacyCell<core::mem::MaybeUninit<rtic::export::PcpMutex<#ty>>>
              = rtic::RacyCell::new(core::mem::MaybeUninit::uninit());
         ));
 
@@ -49,19 +46,19 @@ pub fn codegen(
                 #[allow(non_camel_case_types)]
                 #(#cfgs)*
                 pub struct #name<'a> {
-                    priority: &'a ThreadPriority,
+                    thread_state: &'a ThreadState,
                 }
 
                 #(#cfgs)*
                 impl<'a> #name<'a> {
                     #[inline(always)]
-                    pub unsafe fn new(priority: &'a ThreadPriority) -> Self {
-                        #name { priority }
+                    pub unsafe fn new(thread_state: &'a ThreadState) -> Self {
+                        #name { thread_state }
                     }
 
                     #[inline(always)]
-                    pub fn priority(&self) -> &ThreadPriority {
-                        self.priority
+                    pub fn thread_state(&self) -> &ThreadState {
+                        self.thread_state
                     }
                 }
             ));
@@ -70,13 +67,6 @@ pub fn codegen(
                 #(#cfgs)*
                 #mangled_name.get_mut_unchecked().as_mut_ptr()
             );
-
-            let ceiling = match analysis.ownerships.get(name) {
-                Some(Ownership::Owned { priority }) => *priority,
-                Some(Ownership::CoOwned { priority }) => *priority,
-                Some(Ownership::Contended { ceiling }) => *ceiling,
-                None => 0,
-            };
 
             let tracing_name = format!("shared_{}", name);
             let tracing_name_locked = format!("shared_{}_locked", name);
@@ -88,9 +78,6 @@ pub fn codegen(
 
                     #[inline(always)]
                     fn lock<RTIC_INTERNAL_R>(&mut self, f: impl FnOnce(&mut #ty) -> RTIC_INTERNAL_R) -> RTIC_INTERNAL_R {
-                        /// Priority ceiling
-                        const CEILING: u8 = #ceiling;
-
                         let mutex = unsafe { & *#ptr };
 
                         #[cfg(feature = "profiling")]
@@ -99,7 +86,7 @@ pub fn codegen(
                         #[cfg(feature = "profiling")]
                         rtic::tracing::trace!("locking");
 
-                        let r = mutex.lock(self.priority(), |res| {
+                        let r = mutex.lock(self.thread_state(), |res| {
                             #[cfg(feature = "profiling")]
                             let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name_locked).entered();
 
@@ -129,7 +116,7 @@ pub fn codegen(
         quote!()
     } else {
         quote!(mod shared_resources {
-            use rtic::export::ThreadPriority;
+            use rtic::export::ThreadState;
 
             #(#mod_resources)*
         })

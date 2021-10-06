@@ -101,7 +101,7 @@ mod app {
         println!("task2_3!");
 
         cx.shared.res2.lock(|_res| {
-            std::thread::sleep(Duration::from_millis(5000));
+            //std::thread::sleep(Duration::from_millis(5000));
             println!("task2_3 prime 1000002: {}", nth_prime(1000002).unwrap());
         });
     }
