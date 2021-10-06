@@ -1,37 +1,10 @@
 #[rtic::app]
 mod app {
-    use std::time::Duration;
+    use std::time::{Instant, Duration};
 
-    pub fn nth_prime(n: u32) -> Option<u64> {
-        if n < 1 {
-            return None;
-        }
-
-        // The prime counting function is pi(x) which is approximately x/ln(x)
-        // A good upper bound for the nth prime is ceil(x * ln(x * ln(x)))
-        let x = if n <= 10 { 10.0 } else { n as f64 };
-        let limit: usize = (x * (x * (x).ln()).ln()).ceil() as usize;
-        let mut sieve = vec![true; limit];
-        let mut count = 0;
-
-        // Exceptional case for 0 and 1
-        sieve[0] = false;
-        sieve[1] = false;
-
-        for prime in 2..limit {
-            if !sieve[prime] {
-                continue;
-            }
-            count += 1;
-            if count == n {
-                return Some(prime as u64);
-            }
-
-            for multiple in ((prime * prime)..limit).step_by(prime) {
-                sieve[multiple] = false;
-            }
-        }
-        None
+    fn busy_wait(duration: Duration) {
+        let end = Instant::now() + duration;
+        while Instant::now() < end {}
     }
 
     #[shared]
@@ -48,61 +21,64 @@ mod app {
         task1::spawn_after(Duration::from_millis(0)).unwrap();
         task3::spawn_after(Duration::from_millis(100)).unwrap();
         task2::spawn_after(Duration::from_millis(200)).unwrap();
-        task2_1::spawn_after(Duration::from_millis(300)).unwrap();
-        task2_3::spawn_after(Duration::from_millis(400)).unwrap();
-        task2_2::spawn_after(Duration::from_millis(500)).unwrap();
+        task4::spawn_after(Duration::from_millis(300)).unwrap();
+        task6::spawn_after(Duration::from_millis(400)).unwrap();
+        task5::spawn_after(Duration::from_millis(500)).unwrap();
 
         (Shared { res: 0, res2: 0 }, Local {}, init::Monotonics())
     }
 
     #[task(priority = 1, shared = [res])]
     fn task1(mut cx: task1::Context) {
-        println!("task1!");
+        println!("task1 start");
 
         cx.shared.res.lock(|_res| {
-            println!("task1 prime 1000000: {}", nth_prime(1000000).unwrap());
+            busy_wait(Duration::from_millis(600));
+            println!("task1 done");
         });
     }
 
     #[task(priority = 2)]
     fn task2(_cx: task2::Context) {
-        println!("task2!");
-
-        println!("task2 prime 1000001: {}", nth_prime(1000001).unwrap());
+        println!("task2 start");
+        busy_wait(Duration::from_millis(600));
+        println!("task2 done");
     }
 
     #[task(priority = 3, shared = [res])]
     fn task3(mut cx: task3::Context) {
-        println!("task3!");
+        println!("task3 start");
 
         cx.shared.res.lock(|_res| {
-            println!("task3 prime 1000002: {}", nth_prime(1000002).unwrap());
+            busy_wait(Duration::from_millis(600));
+            println!("task3 done");
         });
     }
 
     #[task(priority = 4, shared = [res2])]
-    fn task2_1(mut cx: task2_1::Context) {
-        println!("task2_1!");
+    fn task4(mut cx: task4::Context) {
+        println!("task4 start");
 
         cx.shared.res2.lock(|_res| {
-            println!("task2_1 prime 1000000: {}", nth_prime(1000000).unwrap());
+            busy_wait(Duration::from_millis(600));
+            println!("task4 done");
         });
     }
 
     #[task(priority = 5)]
-    fn task2_2(_cx: task2_2::Context) {
-        println!("task2_2!");
-
-        println!("task2_2 prime 1000001: {}", nth_prime(1000001).unwrap());
+    fn task5(_cx: task5::Context) {
+        println!("task5 start");
+        busy_wait(Duration::from_millis(600));
+        println!("task5 done");
     }
 
     #[task(priority = 6, shared = [res2])]
-    fn task2_3(mut cx: task2_3::Context) {
-        println!("task2_3!");
+    fn task6(mut cx: task6::Context) {
+        println!("task6 start");
 
         cx.shared.res2.lock(|_res| {
-            //std::thread::sleep(Duration::from_millis(5000));
-            println!("task2_3 prime 1000002: {}", nth_prime(1000002).unwrap());
+            busy_wait(Duration::from_millis(600));
+            println!("task6 done");
         });
     }
 }
