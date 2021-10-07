@@ -1,6 +1,18 @@
+// This is an example of two simultaneous priority inversions (tasks 1,2,3 and tasks 4,5,6).
+// Note that the correct ordering will only be seen when running on a single core (`taskset -c 1`).
+// When running on multiple cores, tasks can have arbitrary execution order, but respect resource locking.
+//
+// The expected (single core) completion order is as follows:
+// task4 (priority ceiling to 6 due to blocking task6)
+// task6
+// task5 (prevented from executing before task6 by task4 ceiling)
+// task1 (priority ceiling to 3 due to blocking task3)
+// task3
+// task2 (prevented from executing before task3 by task1 ceiling)
+
 #[rtic::app]
 mod app {
-    use std::time::{Instant, Duration};
+    use std::time::{Duration, Instant};
 
     fn busy_wait(duration: Duration) {
         let end = Instant::now() + duration;

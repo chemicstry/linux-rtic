@@ -1,3 +1,6 @@
+// Note that the correct ordering will only be seen when running on a single core (`taskset -c 1`).
+// When running on multiple cores, tasks can have arbitrary execution order, but respect resource locking.
+
 #[rtic::app]
 mod app {
     #[shared]
@@ -6,15 +9,13 @@ mod app {
     }
 
     #[local]
-    struct Local {
-        times: u32,
-    }
+    struct Local {}
 
     #[init]
     fn init(_: init::Context) -> (Shared, Local, init::Monotonics) {
         task1::spawn().unwrap();
 
-        (Shared { shared: 0 }, Local { times: 0 }, init::Monotonics())
+        (Shared { shared: 0 }, Local {}, init::Monotonics())
     }
 
     // when omitted priority is assumed to be `1`
@@ -27,22 +28,22 @@ mod app {
             // data can only be modified within this critical section (closure)
             *shared += 1;
 
-            // task2 will *not* run right now due to the critical section
+            // task2 will run right away, but it will stop at `shared` lock
             task2::spawn().unwrap();
 
-            println!("B - shared = {}", *shared);
+            println!("C - shared = {}", *shared);
 
-            // task3 does not contend for `shared` so it's allowed to run now
+            // task3 does not contend for `shared` so it will run to completion
             task3::spawn().unwrap();
         });
 
-        // critical section is over: GPIOB can now start
-
-        println!("E");
+        println!("F");
     }
 
     #[task(priority = 2, shared = [shared])]
     fn task2(mut c: task2::Context) {
+        println!("B");
+
         // the higher priority task does still need a critical section
         let shared = c.shared.shared.lock(|shared| {
             *shared += 1;
@@ -50,23 +51,11 @@ mod app {
             *shared
         });
 
-        println!("D - shared = {}", shared);
+        println!("E - shared = {}", shared);
     }
 
     #[task(priority = 3)]
     fn task3(_: task3::Context) {
-        println!("C");
-        task4::spawn().unwrap();
-    }
-
-    #[task(priority = 4, local = [times])]
-    fn task4(c: task4::Context) {
-        std::thread::sleep(std::time::Duration::from_millis(1));
-
-        *c.local.times += 1;
-        if *c.local.times < 4 {
-            println!("F");
-            task1::spawn().unwrap();
-        }
+        println!("D");
     }
 }

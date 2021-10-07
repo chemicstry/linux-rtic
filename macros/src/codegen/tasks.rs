@@ -25,7 +25,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
         let tiq_expr = quote!(rtic::slab::Slab::new());
         stmts.push(quote!(
             /// Queue that holds inputs for queued task
-            rtic::export::lazy_static::lazy_static! {
+            rtic::lazy_static::lazy_static! {
                 static ref #tiq_ident: #tiq_ty = #tiq_expr;
             }
         ));

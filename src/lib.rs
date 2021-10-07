@@ -1,6 +1,10 @@
 pub use ctrlc;
+pub use futex_queue as mpsc;
+pub use lazy_static;
 pub use linux_rtic_macros::app;
+pub use pcp_mutex::{PcpMutex, ThreadState};
 pub use rtic_core::{prelude as mutex_prelude, Exclusive, Mutex};
+
 use std::cell::UnsafeCell;
 
 #[cfg(feature = "profiling")]
@@ -9,9 +13,6 @@ pub use tracing;
 pub use tracing_chrome;
 #[cfg(feature = "profiling")]
 pub use tracing_subscriber;
-
-/// Contains everything that is internally used after macro expansion
-pub mod export;
 
 pub mod slab;
 

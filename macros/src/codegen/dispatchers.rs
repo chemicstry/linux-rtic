@@ -14,7 +14,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
         #[doc(hidden)]
         #[allow(non_camel_case_types)]
         #[allow(non_upper_case_globals)]
-        rtic::export::lazy_static::lazy_static! {
+        rtic::lazy_static::lazy_static! {
             static ref #thread_init_barrier: std::sync::Arc<std::sync::Barrier> =
                std::sync::Arc::new(std::sync::Barrier::new(#num_threads));
         }
@@ -49,10 +49,11 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
 
         let capacity_lit = util::capacity_literal(channel.capacity as usize);
         let rq = util::run_queue_ident(level);
-        let rq_send_ty = quote!(rtic::export::mpsc::Sender<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>);
-        let rq_recv_ty = quote!(std::sync::Mutex<rtic::export::mpsc::Receiver<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>>);
+        let rq_send_ty =
+            quote!(rtic::mpsc::Sender<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>);
+        let rq_recv_ty = quote!(std::sync::Mutex<rtic::mpsc::Receiver<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>>);
         let rq_expr = quote!({
-            let (tx, rx) = rtic::export::mpsc::FutexQueue::new();
+            let (tx, rx) = rtic::mpsc::FutexQueue::new();
             (tx, std::sync::Mutex::new(rx))
         });
 
@@ -60,7 +61,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
             #[doc(hidden)]
             #[allow(non_camel_case_types)]
             #[allow(non_upper_case_globals)]
-            rtic::export::lazy_static::lazy_static! {
+            rtic::lazy_static::lazy_static! {
                 static ref #rq: (#rq_send_ty, #rq_recv_ty) = #rq_expr;
             }
         ));
@@ -107,7 +108,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 /// The priority of this thread
                 const PRIORITY: u8 = #level;
 
-                let thread_state = rtic::export::ThreadState::init_fifo(PRIORITY).expect("Error setting thread priority");
+                let thread_state = rtic::ThreadState::init_fifo(PRIORITY).expect("Error setting thread priority");
 
                 #[cfg(feature = "profiling")]
                 rtic::tracing::trace!("thread {} waiting for init barrier", stringify!(#thread_ident));

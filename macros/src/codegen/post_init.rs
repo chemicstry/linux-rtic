@@ -15,7 +15,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
     for (name, _task) in &app.software_tasks {
         let tiq_ident = util::task_input_queue_ident(name);
         stmts.push(quote!(
-            rtic::export::lazy_static::initialize(&#tiq_ident);
+            rtic::lazy_static::initialize(&#tiq_ident);
         ));
     }
 
@@ -39,7 +39,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 // - `get_mut_unchecked` to obtain `MaybeUninit<T>`
                 // - `as_mut_ptr` to obtain a raw pointer to `MaybeUninit<T>`
                 // - `write` the defined value for the late resource T
-                #mangled_name.get_mut_unchecked().as_mut_ptr().write(rtic::export::PcpMutex::new(shared_resources.#name, #ceiling));
+                #mangled_name.get_mut_unchecked().as_mut_ptr().write(rtic::PcpMutex::new(shared_resources.#name, #ceiling));
             ));
         }
     }

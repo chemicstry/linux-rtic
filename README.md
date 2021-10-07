@@ -16,7 +16,7 @@ Scheduling of tasks is done by [futex-queue](https://crates.io/crates/futex-queu
 
 ### Resource Locking
 
-Original [cortex-m-rtic](https://github.com/rtic-rs/cortex-m-rtic) uses Stack Resource Policy (SRP), but it is difficult to emulate in userspace Linux. Firstly, setting thread priority for each lock/unlock involves an expensive syscall (~10us on Raspberry Pi 4). Secondly, setting thread priority does not guarantee that lower priority thread will not run. Lower priority thread can be executed on different core, or when higher priority thread is suspended (i.e. I/O syscall). While it is possible to fix memory safety issues by a backup synchronisation mechanism (mutex), the syscall overhead is too high for real-time applications.
+Original [cortex-m-rtic](https://github.com/rtic-rs/cortex-m-rtic) uses Stack Resource Policy (SRP), but it is difficult to emulate in userspace Linux. Firstly, setting thread priority for each lock/unlock involves an expensive syscall (~10us on Raspberry Pi 4). Secondly, setting thread priority does not guarantee that lower priority thread will not run. Lower priority thread can be executed on a different core, or when higher priority thread is suspended (i.e. I/O syscall). While it is possible to fix memory safety issues by a backup synchronisation mechanism (mutex), the syscall overhead is too high for real-time applications.
 
 To solve the issue, a [pcp-mutex](https://crates.io/crates/pcp-mutex) library was written, which implements Original Priority Ceiling Protocol (OPCP). This allows preserving two important properties of SRP: bounding priority inversion and statically preventing deadlocks. This mutex is lock-free in the fast path. Technical details are in the pcp-mutex README.
 

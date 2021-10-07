@@ -136,7 +136,7 @@ pub fn codegen(
     let priority = if ctxt.is_init() {
         None
     } else {
-        Some(quote!(priority: &#lt rtic::export::ThreadState))
+        Some(quote!(priority: &#lt rtic::ThreadState))
     };
 
     let internal_context_name = util::internal_task_context_ident(name);

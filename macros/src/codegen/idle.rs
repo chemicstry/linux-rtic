@@ -54,7 +54,7 @@ pub fn codegen(
         ));
 
         let call_idle = quote!(#name(
-            #name::Context::new(&rtic::export::Priority::new(0))
+            #name::Context::new(&rtic::ThreadState::from_sys())
         ));
 
         (defs, call_idle)
@@ -64,12 +64,13 @@ pub fn codegen(
             quote!(
                 let thread = std::thread::current();
                 rtic::ctrlc::set_handler(move || {
-                    println!("ctrl-c signal");
                     thread.unpark();
                 }).expect("Failed to set ctrl-c handler");
 
                 std::thread::park();
-                println!("Terminating");
+
+                // Fixes newline in terminal
+                println!("");
             ),
         )
     }

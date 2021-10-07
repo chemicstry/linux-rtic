@@ -1,5 +1,7 @@
 #[rtic::app]
 mod app {
+    use std::time::{Duration, Instant};
+
     #[shared]
     struct Shared {}
 
@@ -8,7 +10,10 @@ mod app {
 
     #[init]
     fn init(_cx: init::Context) -> (Shared, Local, init::Monotonics) {
-        foo::spawn_after(std::time::Duration::from_secs(1)).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(1);
+
+        // Spawn at absolute deadline
+        foo::spawn_at(deadline).unwrap();
 
         (Shared {}, Local {}, init::Monotonics())
     }
@@ -17,7 +22,7 @@ mod app {
     fn foo(_cx: foo::Context) {
         println!("foo!");
 
-        // Periodic
-        foo::spawn_after(std::time::Duration::from_secs(1)).unwrap();
+        // Spawn at relative deadline
+        foo::spawn_after(Duration::from_secs(1)).unwrap();
     }
 }

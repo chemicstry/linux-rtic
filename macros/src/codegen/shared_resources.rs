@@ -32,7 +32,7 @@ pub fn codegen(
             #[doc(hidden)]
             #(#attrs)*
             #(#cfgs)*
-            static #mangled_name: rtic::RacyCell<core::mem::MaybeUninit<rtic::export::PcpMutex<#ty>>>
+            static #mangled_name: rtic::RacyCell<core::mem::MaybeUninit<rtic::PcpMutex<#ty>>>
              = rtic::RacyCell::new(core::mem::MaybeUninit::uninit());
         ));
 
@@ -116,7 +116,7 @@ pub fn codegen(
         quote!()
     } else {
         quote!(mod shared_resources {
-            use rtic::export::ThreadState;
+            use rtic::ThreadState;
 
             #(#mod_resources)*
         })
