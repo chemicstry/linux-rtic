@@ -8,7 +8,7 @@ An [RTIC](https://rtic.rs/) implementation for real-time Linux.
 
 ## How it Works
 
-This implementation of RTIC is based on `std::thread` by spawning a thread for each task priority group. Threads are initialized with `SCHED_FIFO` (requires PRREMPT-RT kernel patch) real-time priority.
+This implementation of RTIC is based on `std::thread` by spawning a thread for each task priority group. Threads are initialized with `SCHED_FIFO` (requires PRREMPT-RT kernel patch) real-time policy. Task priorities correspond 1:1 to Linux priorities and usually have a range of 1-99.
 
 ### Scheduling
 
@@ -29,7 +29,7 @@ Scheduling tasks in userspace threads is slow due to context switching overhead 
 
 ## Examples
 
-Running examples requires Linux with PREEMPT-RT patched kernel for `SCHED_FIFO`. A feature flag could be added in the future to run on non-RT kernels.
+Running examples requires Linux with PREEMPT-RT patched kernel for `SCHED_FIFO` and root privileges. This requirement can be lifted by compiling with `--no-default-features`, but then all tasks will share the same priority.
 
 Build:
 > cargo build --release --example priority_inversion
@@ -39,6 +39,9 @@ Run (requires sudo for `sched_setscheduler` syscall):
 
 Single core:
 > sudo taskset -c 1 target/release/examples/priority_inversion
+
+No real-time priorities:
+> cargo run --release --example priority_inversion --no-default-features
 
 ## Credits
 

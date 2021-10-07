@@ -108,7 +108,10 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 /// The priority of this thread
                 const PRIORITY: u8 = #level;
 
+                #[cfg(feature = "rt")]
                 let thread_state = rtic::ThreadState::init_fifo(PRIORITY).expect("Error setting thread priority");
+                #[cfg(not(feature = "rt"))]
+                let thread_state = rtic::ThreadState::from_sys();
 
                 #[cfg(feature = "profiling")]
                 rtic::tracing::trace!("thread {} waiting for init barrier", stringify!(#thread_ident));

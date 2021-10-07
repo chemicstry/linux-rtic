@@ -28,9 +28,13 @@ tracing-subscriber = { version = "0.2", optional = true }
 tracing-chrome = { version = "0.3", optional = true }
 
 [features]
+default = ["rt"]
 # Enables tracing
 profiling = [
     "tracing",
     "tracing-subscriber",
     "tracing-chrome",
 ]
+# Initializes threads with SCHED_FIFO for real-time scheduling.
+# Requires root privileges.
+rt = []
