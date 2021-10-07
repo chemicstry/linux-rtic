@@ -1,7 +1,16 @@
 [package]
 name = "linux-rtic-macros"
 version = "0.1.0"
+authors = ["Jurgis Balčiūnas <chemicstry@gmail.com>"]
 edition = "2021"
+description = "Procedural macros of the linux-rtic crate"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/chemicstry/linux-rtic"
+homepage = "https://github.com/chemicstry/linux-rtic"
+documentation = "https://docs.rs/linux-rtic-macros"
+keywords = ["thread", "concurrency", "linux"]
+categories = ["concurrency", "data-structures"]
+readme = "README.md"
 
 [lib]
 proc-macro = true
