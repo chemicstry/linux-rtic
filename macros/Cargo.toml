@@ -10,7 +10,7 @@ homepage = "https://github.com/chemicstry/linux-rtic"
 documentation = "https://docs.rs/linux-rtic-macros"
 keywords = ["thread", "concurrency", "linux"]
 categories = ["concurrency", "data-structures"]
-readme = "README.md"
+readme = "../README.md"
 
 [lib]
 proc-macro = true
