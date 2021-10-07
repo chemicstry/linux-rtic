@@ -16,6 +16,15 @@ pub use tracing_subscriber;
 
 pub mod slab;
 
+pub fn init_thread_state(priority: pcp_mutex::Priority) -> ThreadState {
+    #[cfg(feature = "rt")]
+    let thread_state = ThreadState::init_fifo(priority).expect("Error setting thread priority");
+    #[cfg(not(feature = "rt"))]
+    let thread_state = rtic::ThreadState::from_sys();
+
+    thread_state
+}
+
 /// Internal replacement for `static mut T`
 #[repr(transparent)]
 pub struct RacyCell<T>(UnsafeCell<T>);
