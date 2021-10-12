@@ -8,7 +8,7 @@ An [RTIC](https://rtic.rs/) implementation for real-time Linux.
 
 ## How it Works
 
-This implementation of RTIC is based on `std::thread` by spawning a thread for each task priority group. Threads are initialized with `SCHED_FIFO` (requires PRREMPT-RT kernel patch) real-time policy. Task priorities correspond 1:1 to Linux priorities and usually have a range of 1-99.
+This implementation of RTIC is based on `std::thread` by spawning a thread for each task priority group. Threads are initialized with `SCHED_FIFO` real-time policy. Task priorities correspond 1:1 to Linux priorities and usually have a range of 1-99.
 
 ### Scheduling
 
@@ -42,6 +42,14 @@ Single core:
 
 No real-time priorities:
 > cargo run --release --example priority_inversion --no-default-features
+
+## Tips to Make Real-Time More Real
+
+- Apply `PREEMPT-RT` kernel patch and compile kernel with `CONFIG_PREEMPT_RT_FULL` to reduce non-preemptable sections in the kernel.
+- Disable dynamic CPU frequency scaling. Either in kernel config or with `cpufreq-set -g performance`.
+- Use `isolcpus` kernel parameter to run RTIC on an isolated core.
+- Ensure that peripheral process (i.e. `spi0`) is scheduled with real-time priority: `sudo chrt -f -p 50 $(pidof spi0)`.
+- Try to limit scheduling between different priority tasks to reduce context switching overhead.
 
 ## Credits
 
