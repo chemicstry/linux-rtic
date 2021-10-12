@@ -3,7 +3,7 @@
 
 #[rtic::app]
 mod app {
-    use std::time::{Instant, Duration};
+    use std::time::{Duration, Instant};
 
     const SAMPLES: u32 = 1_000_000;
 
@@ -23,7 +23,14 @@ mod app {
     fn init(_: init::Context) -> (Shared, Local, init::Monotonics) {
         task1::spawn(0).unwrap();
 
-        (Shared { a: 0 }, Local { taking: Default::default(), releasing: Default::default() }, init::Monotonics())
+        (
+            Shared { a: 0 },
+            Local {
+                taking: Default::default(),
+                releasing: Default::default(),
+            },
+            init::Monotonics(),
+        )
     }
 
     #[task(shared = [a], local = [taking, releasing])]

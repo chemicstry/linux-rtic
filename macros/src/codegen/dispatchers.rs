@@ -90,7 +90,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                             rtic::tracing::trace!("running");
 
                             #name(
-                                #name::Context::new(&thread_state)
+                                #name::Context::new(&core::marker::PhantomData)
                                 #(,#pats)*
                             )
                         }
@@ -108,7 +108,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                 /// The priority of this thread
                 const PRIORITY: u8 = #level;
 
-                let thread_state = rtic::init_thread_state(PRIORITY);
+                rtic::init_thread_state(PRIORITY);
 
                 #[cfg(feature = "profiling")]
                 rtic::tracing::trace!("thread {} waiting for init barrier", stringify!(#thread_ident));

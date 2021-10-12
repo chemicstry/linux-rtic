@@ -105,7 +105,7 @@ pub fn codegen(ctxt: Context, needs_lt: &mut bool, app: &App) -> TokenStream {
     let arg = if ctxt.is_init() {
         None
     } else {
-        Some(quote!(priority: &#lt rtic::ThreadState))
+        Some(quote!(priority: &#lt core::marker::PhantomData<()>))
     };
 
     quote!(

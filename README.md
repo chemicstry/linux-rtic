@@ -23,7 +23,7 @@ To solve the issue, a [pcp-mutex](https://crates.io/crates/pcp-mutex) library wa
 ### Other Notes
 
 Scheduling tasks in userspace threads is slow due to context switching overhead (~10us on Raspberry Pi 4) and other approaches were explored:
-- POSIX signals are used in the older [linux-rtfm](https://github.com/japaric/linux-rtfm) implementation. They are faster than thread context switching, however, tasks are limited to reentrant (signal safe) functions only, which forces to use `no_std`. Resource locking is also slower, because of signal masking syscalls.
+- POSIX signals are used in the older [linux-rtfm](https://github.com/japaric/linux-rtfm) implementation. They are faster than thread context switching, however, tasks are limited to reentrant (signal safe) functions only, which forces to use `no_std`. Also, resource locking slower, because of signal masking syscalls.
 - Kernel threads are only marginally faster as most of the overhead seems to be in the scheduler itself. So losing userspace safety and std library didn't seem worth it.
 - Hard interrupt context would be closest to what cortex-m-rtic does, but Linux does not support interrupt prioritization (only IRQ threads have priorities) and would require major kernel modifications.
 

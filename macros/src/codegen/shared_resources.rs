@@ -46,19 +46,14 @@ pub fn codegen(
                 #[allow(non_camel_case_types)]
                 #(#cfgs)*
                 pub struct #name<'a> {
-                    thread_state: &'a ThreadState,
+                    pub __marker__: &'a core::marker::PhantomData<()>
                 }
 
                 #(#cfgs)*
                 impl<'a> #name<'a> {
                     #[inline(always)]
-                    pub unsafe fn new(thread_state: &'a ThreadState) -> Self {
-                        #name { thread_state }
-                    }
-
-                    #[inline(always)]
-                    pub fn thread_state(&self) -> &ThreadState {
-                        self.thread_state
+                    pub unsafe fn new(__marker__: &'a core::marker::PhantomData<()>) -> Self {
+                        #name { __marker__ }
                     }
                 }
             ));
@@ -86,7 +81,7 @@ pub fn codegen(
                         #[cfg(feature = "profiling")]
                         rtic::tracing::trace!("locking");
 
-                        let r = mutex.lock(self.thread_state(), |res| {
+                        let r = mutex.lock(|res| {
                             #[cfg(feature = "profiling")]
                             let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #tracing_name_locked).entered();
 
@@ -116,8 +111,6 @@ pub fn codegen(
         quote!()
     } else {
         quote!(mod shared_resources {
-            use rtic::ThreadState;
-
             #(#mod_resources)*
         })
     };

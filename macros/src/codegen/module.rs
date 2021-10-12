@@ -79,12 +79,12 @@ pub fn codegen(
             pub shared: #name::SharedResources<#lt>
         ));
 
-        let priority = if ctxt.is_init() {
+        let marker = if ctxt.is_init() {
             None
         } else {
-            Some(quote!(priority))
+            Some(quote!(marker))
         };
-        values.push(quote!(shared: #name::SharedResources::new(#priority)));
+        values.push(quote!(shared: #name::SharedResources::new(#marker)));
     }
 
     if let Context::Init = ctxt {
@@ -133,10 +133,10 @@ pub fn codegen(
         _ => &v,
     };
 
-    let priority = if ctxt.is_init() {
+    let marker = if ctxt.is_init() {
         None
     } else {
-        Some(quote!(priority: &#lt rtic::ThreadState))
+        Some(quote!(marker: &#lt core::marker::PhantomData<()>))
     };
 
     let internal_context_name = util::internal_task_context_ident(name);
@@ -153,7 +153,7 @@ pub fn codegen(
         #(#cfgs)*
         impl<#lt> #internal_context_name<#lt> {
             #[inline(always)]
-            pub unsafe fn new(#priority) -> Self {
+            pub unsafe fn new(#marker) -> Self {
                 #internal_context_name {
                     #(#values,)*
                 }

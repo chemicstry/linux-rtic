@@ -2,7 +2,7 @@ pub use ctrlc;
 pub use futex_queue as mpsc;
 pub use lazy_static;
 pub use linux_rtic_macros::app;
-pub use pcp_mutex::{PcpMutex, ThreadState};
+pub use pcp_mutex::PcpMutex;
 pub use rtic_core::{prelude as mutex_prelude, Exclusive, Mutex};
 
 use std::cell::UnsafeCell;
@@ -16,13 +16,9 @@ pub use tracing_subscriber;
 
 pub mod slab;
 
-pub fn init_thread_state(priority: pcp_mutex::Priority) -> ThreadState {
+pub fn init_thread_state(priority: pcp_mutex::Priority) {
     #[cfg(feature = "rt")]
-    let thread_state = ThreadState::init_fifo(priority).expect("Error setting thread priority");
-    #[cfg(not(feature = "rt"))]
-    let thread_state = rtic::ThreadState::from_sys();
-
-    thread_state
+    pcp_mutex::thread::init_fifo_priority(priority).expect("Error setting thread priority");
 }
 
 /// Internal replacement for `static mut T`

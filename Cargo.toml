@@ -20,7 +20,7 @@ linux-rtic-macros = { path = "macros", version = "0.1.0" }
 rtic-core = "0.3.1"
 heapless = "0.7"
 lazy_static = "1.4"
-pcp-mutex = "0.1"
+pcp-mutex = "0.2"
 ctrlc = "3.2"
 futex-queue = "0.1"
 tracing = { version = "0.1", optional = true }

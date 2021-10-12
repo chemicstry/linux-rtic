@@ -54,7 +54,7 @@ pub fn codegen(
         ));
 
         let call_idle = quote!(#name(
-            #name::Context::new(&rtic::ThreadState::from_sys())
+            #name::Context::new(&core::marker::PhantomData)
         ));
 
         (defs, call_idle)
