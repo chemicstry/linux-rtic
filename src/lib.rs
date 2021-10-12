@@ -1,3 +1,13 @@
+//! Real-Time Interrupt-driven Concurrency (RTIC) framework for real-time Linux
+//!
+//! **IMPORTANT**: This crate is published as [`linux-rtic`] on crates.io but the name of the
+//! library is `rtic`.
+//!
+//! [`linux-rtic`]: https://crates.io/crates/linux-rtic
+//!
+//! The user level documentation is limited, but can be found in README and examples.
+//!
+
 pub use ctrlc;
 pub use futex_queue as mpsc;
 pub use lazy_static;
