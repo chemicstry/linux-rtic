@@ -50,6 +50,7 @@ No real-time priorities:
 - Use `isolcpus` kernel parameter to run RTIC on an isolated core.
 - Ensure that peripheral process (i.e. `spi0`) is scheduled with real-time priority: `sudo chrt -f -p 50 $(pidof spi0)`.
 - Try to limit scheduling between different priority tasks to reduce context switching overhead.
+- Watch [A Checklist for Writing Linux Real-Time Applications - John Ogness, Linutronix GmbH](https://www.youtube.com/watch?v=NrjXEaTSyrw)
 
 ## Credits
 
