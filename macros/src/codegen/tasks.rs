@@ -11,22 +11,22 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
         let inputs = &task.inputs;
         let (_, _, _, input_ty) = util::regroup_inputs(inputs);
 
-        let capacity = task
-            .args
-            .capacity
-            .checked_next_power_of_two()
-            .expect("task capacity too high");
-        let capacity_lit = util::capacity_literal(capacity as usize);
+        let capacity_lit = util::capacity_literal(task.args.capacity as usize);
 
         // Task Input Queue
         // Inputs for scheduled task are pushed into this queue
         let tiq_ident = util::task_input_queue_ident(name);
-        let tiq_ty = quote!(rtic::slab::Slab<#input_ty, #capacity_lit>);
-        let tiq_expr = quote!(rtic::slab::Slab::new());
+        let tiq_sender = quote!(rtic::slab::SlabSender<#input_ty, #capacity_lit>);
+        let tiq_receiver =
+            quote!(rtic::RacyCell<rtic::slab::SlabReceiver<#input_ty, #capacity_lit>>);
+        let tiq_expr = quote!({
+            let (tx, rx) = rtic::slab::Slab::new().split();
+            (tx, rtic::RacyCell::new(rx))
+        });
         stmts.push(quote!(
             /// Queue that holds inputs for queued task
             rtic::lazy_static::lazy_static! {
-                static ref #tiq_ident: #tiq_ty = #tiq_expr;
+                static ref #tiq_ident: (#tiq_sender, #tiq_receiver) = #tiq_expr;
             }
         ));
 

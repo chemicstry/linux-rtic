@@ -1,6 +1,6 @@
 [package]
 name = "linux-rtic"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jurgis Balčiūnas <chemicstry@gmail.com>"]
 edition = "2021"
 description = "A Real-Time Interrupt-driven Concurrency (RTIC) implementation for Linux"
@@ -16,13 +16,13 @@ readme = "README.md"
 name = "rtic"
 
 [dependencies]
-linux-rtic-macros = { path = "macros", version = "0.1.0" }
+linux-rtic-macros = { path = "macros", version = "0.1.1" }
 rtic-core = "0.3.1"
-heapless = "0.7"
 lazy_static = "1.4"
 pcp-mutex = "0.2"
 ctrlc = "3.2"
 futex-queue = "0.1"
+crossbeam = "0.8"
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.2", optional = true }
 tracing-chrome = { version = "0.3", optional = true }

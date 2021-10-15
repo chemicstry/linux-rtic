@@ -187,7 +187,7 @@ pub fn codegen(
             pub fn #internal_spawn_ident(#(#inputs_args,)*) -> Result<(), #inputs_ty> {
                 let input = #inputs_tupled;
 
-                match #input_queue.insert(input) {
+                match #input_queue.0.insert(input) {
                     Ok(handle) => {
                         #[cfg(feature = "profiling")]
                         rtic::tracing::trace!("spawn {}", stringify!(#name));
@@ -213,7 +213,7 @@ pub fn codegen(
             pub fn #internal_spawn_at_ident(instant: std::time::Instant, #(#inputs_args,)*) -> Result<(), #inputs_ty> {
                 let input = #inputs_tupled;
 
-                match #input_queue.insert(input) {
+                match #input_queue.0.insert(input) {
                     Ok(handle) => {
                         #[cfg(feature = "profiling")]
                         rtic::tracing::trace!("schedule {} at {:?}", stringify!(#name), instant);

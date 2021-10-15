@@ -47,7 +47,11 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
             }
         ));
 
-        let capacity_lit = util::capacity_literal(channel.capacity as usize);
+        let capacity = channel
+            .capacity
+            .checked_next_power_of_two()
+            .expect("task capacity too high");
+        let capacity_lit = util::capacity_literal(capacity as usize);
         let rq = util::run_queue_ident(level);
         let rq_send_ty =
             quote!(rtic::mpsc::Sender<(#spawn_enum, rtic::slab::SlabHandle), #capacity_lit>);
@@ -81,7 +85,7 @@ pub fn codegen(app: &App, analysis: &Analysis) -> Vec<TokenStream> {
                     #(#cfgs)*
                     #spawn_enum::#name => {
                         unsafe {
-                            let #tupled = #input_queue.remove(handle);
+                            let #tupled = #input_queue.1.get_mut_unchecked().remove(handle);
 
                             #[cfg(feature = "profiling")]
                             let _span = rtic::tracing::span!(rtic::tracing::Level::TRACE, #span_name).entered();

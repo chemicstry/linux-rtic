@@ -1,6 +1,6 @@
 [package]
 name = "linux-rtic-macros"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jurgis Balčiūnas <chemicstry@gmail.com>"]
 edition = "2021"
 description = "Procedural macros of the linux-rtic crate"

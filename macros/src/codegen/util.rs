@@ -30,6 +30,11 @@ pub fn thread_ident(priority: u8) -> Ident {
     mark_internal_name(&format!("thread_P{}", priority))
 }
 
+/// Generates an OS thread name
+pub fn thread_name(priority: u8) -> String {
+    format!("thd_P{}", priority)
+}
+
 /// Generates an identifier for the `enum` of `spawn`-able tasks
 ///
 /// This identifier needs the same structure as the `RQ` identifier because there's one ready queue

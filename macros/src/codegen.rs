@@ -32,8 +32,13 @@ pub fn app(app: &App, analysis: &Analysis) -> TokenStream {
     ));
     for (&level, _channel) in &analysis.channels {
         let thread_ident = util::thread_ident(level);
+        let thread_name = util::thread_name(level);
         spawn_threads.push(quote!(
-            thread_handles.push(std::thread::spawn(#thread_ident));
+            let thread = std::thread::Builder::new()
+                .name(#thread_name.to_string())
+                .spawn(#thread_ident);
+
+            thread_handles.push(thread);
         ));
     }
 
